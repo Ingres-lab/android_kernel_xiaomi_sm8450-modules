@@ -40,6 +40,7 @@
 #include "sde_hw_ctl.h"
 #include "sde_hw_dspp.h"
 #include "sde_crtc.h"
+#include "mi_sde_crtc.h"
 #include "sde_plane.h"
 #include "sde_hw_util.h"
 #include "sde_hw_catalog.h"
@@ -4777,6 +4778,8 @@ void sde_crtc_commit_kickoff(struct drm_crtc *crtc,
 
 	idle_pc_state = sde_crtc_get_property(cstate, CRTC_PROP_IDLE_PC_STATE);
 
+	mi_sde_crtc_update_layer_state(cstate);
+
 	sde_crtc->kickoff_in_progress = true;
 	list_for_each_entry(encoder, &dev->mode_config.encoder_list, head) {
 		if (encoder->crtc != crtc)
@@ -6670,6 +6673,9 @@ static void sde_crtc_install_properties(struct drm_crtc *crtc,
 	}
 
 	sde_crtc_setup_capabilities_blob(info, catalog);
+
+	/* mi properties */
+	mi_sde_crtc_install_properties(&sde_crtc->property_info);
 
 	msm_property_install_range(&sde_crtc->property_info,
 		"input_fence_timeout", 0x0, 0,

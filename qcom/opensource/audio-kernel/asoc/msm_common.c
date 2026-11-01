@@ -492,7 +492,7 @@ int msm_common_snd_hw_params(struct snd_pcm_substream *substream,
 					goto done;
 				}
 #ifndef ENABLE_WSA
-				for (i = rtd->num_cpus; i < (rtd->num_cpus + rtd->num_codecs); i++) {
+				for (i = rtd->dai_link->num_cpus; i < (rtd->dai_link->num_cpus + rtd->dai_link->num_codecs); i++) {
 					component = dais[i]->component;
 					snd_soc_dai_set_fmt(dais[i],
 							SND_SOC_DAIFMT_CBS_CFS |
@@ -869,7 +869,7 @@ int msm_channel_map_get(struct snd_kcontrol *kcontrol,
 			ch_cnt = tx_ch_cnt;
 		}
 		if (ch_cnt > 2) {
-			pr_err("%s: Incorrect channel count: %d\n", ch_cnt);
+			pr_err("%s: Incorrect channel count: %d\n", __func__, ch_cnt);
 			return -EINVAL;
 		}
 		len = sizeof(uint32_t) * (ch_cnt + 1);

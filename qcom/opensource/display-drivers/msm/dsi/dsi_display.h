@@ -851,4 +851,10 @@ int dsi_display_get_panel_scan_line(void *display, u16 *scan_line, ktime_t *scan
 struct dsi_display *dsi_display_get_main_display(void);
 #endif /* CONFIG_DRM_SDE_SPECIFIC_PANEL */
 
+int dsi_display_ctrl_get_host_init_state(struct dsi_display *dsi_display,
+		bool *state);
+int dsi_display_cmd_rx(struct dsi_display *display,
+		       struct dsi_cmd_desc *cmd);
+char *mi_dsi_display_get_cmdline_panel_info(struct dsi_display *display);
+
 #endif /* _DSI_DISPLAY_H_ */

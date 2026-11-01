@@ -19,7 +19,7 @@
 
 #include <linux/hwspinlock.h>
 #include <soc/qcom/secure_buffer.h>
-#include <linux/qcom_scm.h>
+#include <linux/firmware/qcom/qcom_scm.h>
 
 #include <linux/sysfs.h>
 
@@ -363,7 +363,7 @@ static size_t ipcmem_rx_avail(struct ipclite_fifo *rx_fifo)
 	if (WARN_ON_ONCE(len > rx_fifo->length))
 		len = 0;
 
-	IPCLITE_OS_LOG(IPCLITE_DBG, "len=%d\n", len);
+	IPCLITE_OS_LOG(IPCLITE_DBG, "len=%zu\n", len);
 
 	return len;
 }
@@ -913,7 +913,7 @@ static int map_ipcmem(struct ipclite_info *ipclite, const char *name)
 	if (!ipclite->ipcmem.mem.virt_base)
 		return -ENOMEM;
 
-	IPCLITE_OS_LOG(IPCLITE_DBG, "aux_base = %lx, size=%d,virt_base=%p\n",
+	IPCLITE_OS_LOG(IPCLITE_DBG, "aux_base = %llx, size=%u,virt_base=%p\n",
 			ipclite->ipcmem.mem.aux_base, ipclite->ipcmem.mem.size,
 			ipclite->ipcmem.mem.virt_base);
 
@@ -983,7 +983,7 @@ static void ipcmem_init(struct ipclite_mem *ipcmem)
 								((char *)ipcmem->mem.virt_base +
 						ipcmem_toc_partition_entries[i].base_offset);
 
-		IPCLITE_OS_LOG(IPCLITE_DBG, "partition[%d] = %p,partition_base_offset[%d]=%lx\n",
+		IPCLITE_OS_LOG(IPCLITE_DBG, "partition[%d] = %p,partition_base_offset[%d]=%x\n",
 					i, ipcmem->partition[i],
 					i, ipcmem_toc_partition_entries[i].base_offset);
 
@@ -1121,7 +1121,7 @@ int32_t get_global_partition_info(struct global_region_info *global_ipcmem)
 							global_partition->hdr.region_offset);
 	global_ipcmem->size = (size_t)(global_partition->hdr.region_size);
 
-	IPCLITE_OS_LOG(IPCLITE_DBG, "base = %p, size=%lx\n", global_ipcmem->virt_base,
+	IPCLITE_OS_LOG(IPCLITE_DBG, "base = %p, size=%x\n", global_ipcmem->virt_base,
 									global_ipcmem->size);
 	return 0;
 }

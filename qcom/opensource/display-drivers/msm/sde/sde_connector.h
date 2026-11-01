@@ -15,6 +15,7 @@
 #include "msm_prop.h"
 #include "sde_kms.h"
 #include "sde_fence.h"
+#include "mi_sde_connector.h"
 
 #define SDE_CONNECTOR_NAME_SIZE	16
 #define SDE_CONNECTOR_DHDR_MEMPOOL_MAX_SIZE	SZ_32
@@ -578,6 +579,9 @@ struct sde_misr_sign {
  * @previous_misr_sign: store previous misr signature
  * @hwfence_wb_retire_fences_enable: enable hw-fences for wb retire-fence
  */
+void _sde_connector_report_panel_dead(struct sde_connector *conn,
+				      bool panel_dead);
+
 struct sde_connector {
 	struct drm_connector base;
 
@@ -657,6 +661,9 @@ struct sde_connector {
 	struct sde_misr_sign previous_misr_sign;
 
 	bool hwfence_wb_retire_fences_enable;
+
+	struct mi_sde_cdev *mi_cdev;
+	struct mi_layer_state mi_layer_state;
 };
 
 /**

@@ -2,7 +2,12 @@ LINUXINCLUDE    += -I$(EVA_ROOT)/include \
                    -I$(EVA_ROOT)/include/uapi \
 				   -I$(EVA_ROOT)/include/uapi/eva
 
-ccflags-y += -I$(srctree)/drivers/media/platform/msm/synx/
+# 6.6: synx moved out of the kernel tree into an external module.
+ccflags-y += -I$(EVA_ROOT)/../synx-kernel/msm/synx/ \
+             -I$(EVA_ROOT)/../synx-kernel/include/uapi/synx/ \
+             -I$(EVA_ROOT)/../synx-kernel/include/uapi/synx/media/
+ccflags-y += -DCONFIG_MSM_GLOBAL_SYNX=1
+ccflags-y += -I$(EVA_ROOT)/../dsp-kernel/include
 
 # add flag to compile mmrm actual implementatio instead of stub version.
 # to follow up with mmrm team if techpack users need to define this for long term?
@@ -46,3 +51,7 @@ msm-eva-objs := eva/cvp.o \
 		eva/cvp_fw_load.o
 obj-m += msm-eva.o
 
+# 6.6 port: this vendor driver prints pointers with %x/%llx in dozens of
+# places. Keep the diagnostics but do not fail the build on them.
+ccflags-y += -Wno-error=format -Wno-error=format-insufficient-args \
+             -Wno-error=format-extra-args

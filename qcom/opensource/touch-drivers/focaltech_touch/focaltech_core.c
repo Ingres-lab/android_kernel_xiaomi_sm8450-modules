@@ -160,7 +160,7 @@ static struct gh_acl_desc *fts_ts_vm_get_acl(enum gh_vm_names vm_name)
 	struct gh_acl_desc *acl_desc;
 	gh_vmid_t vmid;
 
-	gh_rm_get_vmid(vm_name, &vmid);
+	ghd_rm_get_vmid(vm_name, &vmid);
 
 	acl_desc = kzalloc(offsetof(struct gh_acl_desc, acl_entries[1]),
 			GFP_KERNEL);
@@ -710,7 +710,7 @@ int fts_ts_handle_trusted_touch_tvm(struct fts_ts_data *fts_data, int value)
 		break;
 
 	default:
-		FTS_ERROR("unsupported value: %lu\n", value);
+		FTS_ERROR("unsupported value: %d\n", value);
 		err = -EINVAL;
 		break;
 	}
@@ -789,7 +789,7 @@ static void fts_ts_trusted_touch_abort_pvm(struct fts_ts_data *fts_data)
 	case PVM_IOMEM_LENT:
 	case PVM_IOMEM_LENT_NOTIFIED:
 	case PVM_IOMEM_RELEASE_NOTIFIED:
-		rc = gh_rm_mem_reclaim(fts_data->vm_info->vm_mem_handle, 0);
+		rc = ghd_rm_mem_reclaim(fts_data->vm_info->vm_mem_handle, 0);
 		if (rc)
 			pr_err("failed to reclaim iomem on pvm rc:%d\n", rc);
 		fts_data->vm_info->vm_mem_handle = 0;
@@ -907,7 +907,7 @@ static void fts_trusted_touch_pvm_vm_mode_disable(struct fts_ts_data *fts_data)
 	if (fts_ts_trusted_touch_get_vm_state(fts_data) != PVM_ALL_RESOURCES_RELEASE_NOTIFIED)
 		pr_err("all release notifications are not received yet\n");
 
-	rc = gh_rm_mem_reclaim(fts_data->vm_info->vm_mem_handle, 0);
+	rc = ghd_rm_mem_reclaim(fts_data->vm_info->vm_mem_handle, 0);
 	if (rc) {
 		pr_err("Trusted touch VM mem reclaim failed rc:%d\n", rc);
 		goto error;
@@ -1019,7 +1019,7 @@ static int fts_ts_vm_mem_lend(struct fts_ts_data *fts_data)
 		goto sgl_error;
 	}
 
-	rc = gh_rm_mem_lend(GH_RM_MEM_TYPE_IO, 0, TRUSTED_TOUCH_MEM_LABEL,
+	rc = ghd_rm_mem_lend(GH_RM_MEM_TYPE_IO, 0, TRUSTED_TOUCH_MEM_LABEL,
 			acl_desc, sgl_desc, NULL, &mem_handle);
 	if (rc) {
 		pr_err("Failed to lend IO memories for Trusted touch rc:%d\n",
@@ -1031,7 +1031,7 @@ static int fts_ts_vm_mem_lend(struct fts_ts_data *fts_data)
 
 	fts_ts_trusted_touch_set_vm_state(fts_data, PVM_IOMEM_LENT);
 
-	gh_rm_get_vmid(GH_TRUSTED_VM, &trusted_vmid);
+	ghd_rm_get_vmid(GH_TRUSTED_VM, &trusted_vmid);
 
 	vmid_desc = fts_ts_vm_get_vmid(trusted_vmid);
 
@@ -1154,7 +1154,7 @@ int fts_ts_handle_trusted_touch_pvm(struct fts_ts_data *fts_data, int value)
 		break;
 
 	default:
-		FTS_ERROR("unsupported value: %lu\n", value);
+		FTS_ERROR("unsupported value: %d\n", value);
 		err = -EINVAL;
 		break;
 	}

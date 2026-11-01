@@ -2994,7 +2994,7 @@ static int __cam_isp_ctx_reg_upd_in_sof(struct cam_isp_context *ctx_isp,
 		list_del_init(&req->list);
 		req_isp = (struct cam_isp_ctx_req *) req->req_priv;
 		if (req_isp->num_fence_map_out == req_isp->num_acked)
-			__cam_isp_ctx_move_req_to_free_list(ctx, req);
+			list_add_tail(&req->list, &ctx->free_req_list);
 /* sony extension begin */
 #if 1
 		else {

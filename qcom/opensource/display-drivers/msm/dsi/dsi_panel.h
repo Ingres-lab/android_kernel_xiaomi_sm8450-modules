@@ -21,6 +21,7 @@
 #include "dsi_clk.h"
 #include "dsi_pwr.h"
 #include "dsi_parser.h"
+#include "mi_dsi_panel.h"
 #include "msm_drv.h"
 
 #define MAX_BL_LEVEL 4096
@@ -292,6 +293,10 @@ struct dsi_panel {
 #ifdef CONFIG_DRM_SDE_SPECIFIC_PANEL
 	struct panel_specific_pdata *spec_pdata;
 #endif /* CONFIG_DRM_SDE_SPECIFIC_PANEL */
+
+	struct mi_dsi_panel_cfg mi_cfg;
+	struct drm_panel_cell_id_config cell_id_config;
+	struct drm_panel_wp_config wp_config;
 };
 
 static inline bool dsi_panel_ulps_feature_enabled(struct dsi_panel *panel)
@@ -359,6 +364,13 @@ int dsi_panel_set_lp1(struct dsi_panel *panel);
 
 int dsi_panel_set_lp2(struct dsi_panel *panel);
 
+int dsi_panel_update_backlight(struct dsi_panel *panel,
+				u32 bl_lvl);
+int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
+				 enum dsi_cmd_set_type type,
+				 struct dsi_parser_utils *utils);
+int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
+			 enum dsi_cmd_set_type type);
 int dsi_panel_set_nolp(struct dsi_panel *panel);
 
 #ifdef CONFIG_DRM_SDE_SPECIFIC_PANEL

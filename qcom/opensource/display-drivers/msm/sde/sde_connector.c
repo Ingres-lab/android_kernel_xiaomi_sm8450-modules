@@ -2575,10 +2575,13 @@ static void sde_connector_early_unregister(struct drm_connector *connector)
 	/* debugfs under connector->debugfs are deleted by drm_debugfs */
 }
 
-static int sde_drm_mode_somc_compare(void *priv, struct list_head *lh_a, struct list_head *lh_b)
+static int sde_drm_mode_somc_compare(void *priv, const struct list_head *lh_a,
+		const struct list_head *lh_b)
 {
-	struct drm_display_mode *a = list_entry(lh_a, struct drm_display_mode, head);
-	struct drm_display_mode *b = list_entry(lh_b, struct drm_display_mode, head);
+	const struct drm_display_mode *a =
+		list_entry(lh_a, struct drm_display_mode, head);
+	const struct drm_display_mode *b =
+		list_entry(lh_b, struct drm_display_mode, head);
 	int diff;
 
 	diff = ((b->type & DRM_MODE_TYPE_PREFERRED) != 0) -
@@ -2769,7 +2772,7 @@ static int sde_connector_atomic_check(struct drm_connector *connector,
 	return 0;
 }
 
-static void _sde_connector_report_panel_dead(struct sde_connector *conn,
+void _sde_connector_report_panel_dead(struct sde_connector *conn,
 	bool skip_pre_kickoff)
 {
 	struct drm_event event;

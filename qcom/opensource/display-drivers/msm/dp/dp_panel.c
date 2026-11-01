@@ -1965,7 +1965,7 @@ static u32 dp_panel_get_supported_bpp_dfp_hdmi(struct dp_panel *dp_panel,
 	}
 
 	hdmi_bpp = min_t(u32, bpp, hdmi_max_bpc);
-	DP_DEBUG("hdmi_bpp=%d, bpp=%d, mode_pclk_khz=%d, hdmi_max_tmds=%lu\n",
+	DP_DEBUG("hdmi_bpp=%d, bpp=%d, mode_pclk_khz=%d, hdmi_max_tmds=%llu\n",
 		 hdmi_bpp, bpp, mode_pclk_khz,
 		 (u64)dp_panel->det_dfp_max_tmds * 2500);
 

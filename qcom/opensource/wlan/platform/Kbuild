@@ -129,4 +129,7 @@ obj-$(CONFIG_CNSS2) += cnss2/
 obj-$(CONFIG_ICNSS2) += icnss2/
 obj-$(CONFIG_CNSS_GENL) += cnss_genl/
 obj-$(CONFIG_WCNSS_MEM_PRE_ALLOC) += cnss_prealloc/
-obj-y += cnss_utils/
+obj-m += cnss_utils/
+
+# 6.6 port: icnss2 includes <soc/qcom/icnss2.h>; provide it from inc/.
+KBUILD_CPPFLAGS += -I$(WLAN_PLATFORM_ROOT)/inc

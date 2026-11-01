@@ -1069,7 +1069,7 @@ static int eva_fastrpc_driver_register(uint32_t handle)
 		init_completion(&frpc_node->fastrpc_probe_completion);
 
 		mutex_lock(&me->fastrpc_driver_list.lock);
-		dprintk(CVP_DSP, "Add frpc node 0x%x to list\n", frpc_node);
+		dprintk(CVP_DSP, "Add frpc node 0x%pK to list\n", frpc_node);
 		list_add_tail(&frpc_node->list, &me->fastrpc_driver_list.list);
 		mutex_unlock(&me->fastrpc_driver_list.lock);
 		INIT_MSM_CVP_LIST(&frpc_node->dsp_sessions);
@@ -1375,7 +1375,7 @@ static void __dsp_cvp_sess_create(struct cvp_dsp_cmd_msg *cmd)
 		dprintk(CVP_WARN, "%s incorrect pid\n", __func__);
 		goto fail_get_pid;
 	}
-	dprintk(CVP_DSP, "%s get pid_s 0x%x from pidA 0x%x\n", __func__,
+	dprintk(CVP_DSP, "%s get pid_s 0x%pK from pidA 0x%x\n", __func__,
 			pid_s, inst->process_id);
 
 	task = get_pid_task(pid_s, PIDTYPE_TGID);
@@ -1503,7 +1503,7 @@ static void __dsp_cvp_power_req(struct cvp_dsp_cmd_msg *cmd)
 			dsp2cpu_cmd->session_cpu_low);
 
 	if (!inst || !is_cvp_inst_valid(inst)) {
-		dprintk(CVP_ERR, "%s incorrect session ID %llx\n", __func__, inst);
+		dprintk(CVP_ERR, "%s incorrect session ID %pK\n", __func__, inst);
 		cmd->ret = -1;
 		goto dsp_fail_power_req;
 	}

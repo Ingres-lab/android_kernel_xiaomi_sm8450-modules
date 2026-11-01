@@ -308,9 +308,11 @@ static ssize_t dp_display_dp_stop_store(struct device *dev,
 		dp_display_state_remove(DP_STATE_CONFIGURED);
 		mutex_unlock(&dp->session_lock);
 
-		if (!dp->debug->sim_mode && !dp->parser->no_aux_switch
-		    && !dp->parser->gpio_aux_switch)
-			dp->aux->aux_switch(dp->aux, false, ORIENTATION_NONE);
+		/*
+		 * 6.6 port: dp_parser::no_aux_switch and the dp_aux::aux_switch
+		 * op no longer exist; FSA4480 switching is handled through
+		 * aux_switch_node in dp_aux.c.
+		 */
 	}
 
 	return count;

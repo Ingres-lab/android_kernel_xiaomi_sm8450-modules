@@ -31,9 +31,13 @@ WLAN_PLATFORM_INC ?= $(WLAN_ROOT)/../platform/inc
 ifeq ($(KERNEL_BUILD), n)
 ifneq ($(ANDROID_BUILD_TOP),)
       ANDROID_BUILD_TOP_REL := $(shell python -c "import os.path; print(os.path.relpath('$(ANDROID_BUILD_TOP)'))")
+      # Only rebase relative paths; absolute ones (as passed by the Android
+      # module build) must not be prefixed.
+      ifeq ($(filter /%,$(WLAN_ROOT)),)
       override WLAN_ROOT := $(ANDROID_BUILD_TOP_REL)/$(WLAN_ROOT)
       override WLAN_COMMON_INC := $(ANDROID_BUILD_TOP_REL)/$(WLAN_COMMON_INC)
       override WLAN_FW_API := $(ANDROID_BUILD_TOP_REL)/$(WLAN_FW_API)
+      endif
 endif
 endif
 
@@ -4464,3 +4468,16 @@ OBJS_DIRS += $(dir $(OBJS)) \
 CLEAN_DIRS := $(addsuffix *.o,$(sort $(OBJS_DIRS))) \
 	      $(addsuffix .*.o.cmd,$(sort $(OBJS_DIRS)))
 clean-files := $(CLEAN_DIRS)
+
+# 6.6 port: multibus.h lives in the split tree's hif dispatcher dir.
+ccflags-y += -I$(WLAN_COMMON_INC)/hif/src/dispatcher \
+             -I$(WLAN_COMMON_INC)/hif/src/dispatcher/inc
+
+# 6.6 port: the split qca-wifi-host-cmn tree is normally consumed through a
+# generated -I list. Add every header directory in it so includes like
+# <multibus.h> / <ce_api.h> resolve without chasing them one by one.
+WLAN_CMN_INC_DIRS := $(shell find $(WLAN_COMMON_INC) -name '*.h' -printf '%h\n' 2>/dev/null | sort -u)
+ccflags-y += $(addprefix -I,$(WLAN_CMN_INC_DIRS))
+
+# 6.6 port: vendor code has many non-static functions without prototypes.
+ccflags-y += -Wno-error=missing-prototypes -Wno-missing-prototypes

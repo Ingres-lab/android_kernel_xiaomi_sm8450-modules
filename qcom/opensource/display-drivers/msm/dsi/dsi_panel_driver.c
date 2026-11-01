@@ -17,6 +17,7 @@
 #include <linux/notifier.h>
 #include <linux/export.h>
 #include <linux/drm_notify.h>
+#include <linux/pinctrl/consumer.h>
 #include "dsi_panel_driver.h"
 #include "dsi_panel.h"
 #include "dsi_display.h"
@@ -1439,7 +1440,6 @@ static ssize_t dsi_panel_driver_reg_write_store(struct device *dev,
 	dsi.last_command = true;
 	dsi.msg.channel = 0;
 	dsi.msg.flags = 0;
-	dsi.msg.ctrl = 0;
 	dsi.post_wait_ms = 0;
 	dsi.msg.tx_len = i;
 	dsi.msg.tx_buf = data;
@@ -1525,11 +1525,9 @@ static ssize_t dsi_panel_driver_reg_read_store(struct device *dev,
 	dsi.last_command = true;
 	dsi.msg.channel = 0;
 	dsi.msg.flags = 0;
-	dsi.msg.ctrl = 0;
 	dsi.post_wait_ms = 5;
 	dsi.msg.tx_len = i;
 	dsi.msg.tx_buf = data;
-	dsi.msg.wait_ms = 0;
 
 	for (j = 0; j < i; j++)
 		pr_debug("%s: tx_buf[%d] = 0x%x\n", __func__, j,
@@ -1600,7 +1598,7 @@ static ssize_t dsi_panel_driver_area_count_show(struct device *dev,
 
 	memset(area_count_str, 0, sizeof(char) * DSI_BUF_SIZE);
 	for (i = 0; i < spec_pdata->area_count_table_size; i++) {
-		pr_debug("%ld, ", spec_pdata->area_count[i]);
+		pr_debug("%u, ", spec_pdata->area_count[i]);
 		memset(count_data, 0, sizeof(char) * BR_MAX_FIGURE);
 		if (spec_pdata->area_count[i] > AREA_COUNT_MAX) {
 			/* over 167 min */
@@ -1608,11 +1606,11 @@ static ssize_t dsi_panel_driver_area_count_show(struct device *dev,
 		}
 		if (i == 0) {
 			snprintf(count_data, BR_MAX_FIGURE,
-				"%ld", spec_pdata->area_count[i]);
+				"%u", spec_pdata->area_count[i]);
 			strlcpy(area_count_str, count_data, DSI_BUF_SIZE);
 		} else {
 			snprintf(count_data, BR_MAX_FIGURE,
-				",%ld", spec_pdata->area_count[i]);
+				",%u", spec_pdata->area_count[i]);
 			strlcat(area_count_str, count_data, DSI_BUF_SIZE);
 		}
 	}

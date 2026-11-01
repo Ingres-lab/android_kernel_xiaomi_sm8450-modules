@@ -52,3 +52,13 @@ modules_install:
 
 clean:
 	$(MAKE) -C $(KERNEL_SRC) M=$(M) clean $(KBUILD_OPTIONS)
+
+# 6.6 port: the split qca-wifi-host-cmn tree holds the common sources/dirs
+# (hif, hdd, dp, umac, qdf...). qcacld/cmn only carries cfg here, so point
+# WLAN_COMMON_ROOT at the sibling tree (Lineage passes WLAN_ROOT, which skips
+# the block above that would normally set this).
+KBUILD_OPTIONS += WLAN_COMMON_ROOT=../qca-wifi-host-cmn
+
+# 6.6 port: profile defaults to the .qca6490 dir name, which has no defconfig.
+# Select the waipio profile so HIF_PCI / WLAN_OPEN_SOURCE / CE configs are set.
+KBUILD_OPTIONS += CONFIG_QCA_CLD_WLAN_PROFILE=waipio_gki_qca6490

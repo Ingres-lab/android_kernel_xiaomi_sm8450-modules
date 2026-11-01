@@ -4936,6 +4936,16 @@ int cnss_register_subsys(struct cnss_plat_data *plat_priv)
 		return -EINVAL;
 	}
 
+	/*
+	 * 6.6 port: without the legacy SSR framework, cnss_recovery_handler()
+	 * panics the SoC when recovery_enabled is false. Honour the same DT
+	 * opt-in the PCIe link-down quirk uses so firmware self-recovery
+	 * (shutdown -> ramdump -> powerup) is actually taken.
+	 */
+	if (of_property_read_bool(plat_priv->plat_dev->dev.of_node,
+				  "cnss-enable-self-recovery"))
+		plat_priv->recovery_enabled = 1;
+
 	return 0;
 }
 

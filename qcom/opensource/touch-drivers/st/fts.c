@@ -4583,7 +4583,7 @@ skip_to_power_gpio_setup:
 	/* get touch type */
 	info->is_primary = (fts_get_touch_type(dp) == PRIMARY_TOUCH_IDX) ? true : false;
 
-#if defined(CONFIG_FB)
+#if !defined(CONFIG_DRM) && defined(CONFIG_FB)
 	info->fb_notifier = fts_noti_block;
 #endif
 
@@ -4849,6 +4849,10 @@ static void st_fts_spi_remove(struct spi_device *spi)
 static struct of_device_id fts_of_match_table[] = {
 	{
 		.compatible = "st,fts",
+	},
+	{
+		/* ingres DT node */
+		.compatible = "st,spi",
 	},
 	{
 		.compatible = "st,fts2",

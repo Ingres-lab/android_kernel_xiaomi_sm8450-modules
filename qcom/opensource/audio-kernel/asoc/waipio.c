@@ -1000,7 +1000,7 @@ static int cs35l41_init(struct snd_soc_pcm_runtime *rtd)
 	struct snd_soc_dapm_context *dapm;
 	int i;
 
-	for (i = rtd->num_cpus; i < (rtd->num_cpus + rtd->num_codecs); i++) {
+	for (i = rtd->dai_link->num_cpus; i < (rtd->dai_link->num_cpus + rtd->dai_link->num_codecs); i++) {
 
 		dapm = snd_soc_component_get_dapm(dais[i]->component);
 		if (dapm->component->name_prefix == NULL) {

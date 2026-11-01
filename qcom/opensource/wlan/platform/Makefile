@@ -48,3 +48,14 @@ modules_install:
 
 clean:
 	$(MAKE) -C $(KERNEL_SRC) M=$(M) clean
+
+# 6.6 port: Lineage passes WLAN_PLATFORM_ROOT on the command line, which skips
+# the default-config branch above. Set the waipio config set explicitly.
+KBUILD_OPTIONS += CONFIG_CNSS_OUT_OF_TREE=y
+KBUILD_OPTIONS += CONFIG_CNSS2=m
+KBUILD_OPTIONS += CONFIG_CNSS2_QMI=y
+KBUILD_OPTIONS += CONFIG_CNSS_QMI_SVC=m
+KBUILD_OPTIONS += CONFIG_CNSS_UTILS=m
+KBUILD_OPTIONS += CONFIG_CNSS_PLAT_IPC_QMI_SVC=m
+KBUILD_OPTIONS += CONFIG_WCNSS_MEM_PRE_ALLOC=m
+KBUILD_OPTIONS += CONFIG_CNSS_GENL=m

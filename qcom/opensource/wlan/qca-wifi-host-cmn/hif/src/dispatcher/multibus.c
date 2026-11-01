@@ -21,6 +21,7 @@
 #include "hif_debug.h"
 #include "hif.h"
 #include "hif_main.h"
+#include "hif_exec.h"
 #include "hif_io32.h"
 #include "multibus.h"
 #include "dummy.h"
