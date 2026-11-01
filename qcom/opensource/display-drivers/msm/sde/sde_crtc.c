@@ -63,6 +63,8 @@
 #include "hfi_kms.h"
 #include "hfi_commands_display.h"
 
+#include "mi_sde_crtc.h"
+
 #define SDE_PSTATES_MAX (SDE_STAGE_MAX * 4)
 #define SDE_MULTIRECT_PLANE_MAX (SDE_STAGE_MAX * 2)
 
@@ -3379,11 +3381,11 @@ static void _sde_crtc_frame_data_notify(struct drm_crtc *crtc,
 
 void sde_crtc_get_frame_data(struct drm_crtc *crtc)
 {
-	struct sde_crtc *sde_crtc;
-	struct drm_plane *plane;
+	struct sde_crtc *sde_crtc = NULL;
+	struct drm_plane *plane = NULL;
 	struct sde_drm_frame_data_packet frame_data_packet = {0, 0};
-	struct sde_drm_frame_data_packet *data;
-	struct sde_frame_data *frame_data;
+	struct sde_drm_frame_data_packet *data = NULL;
+	struct sde_frame_data *frame_data = NULL;
 	int i = 0;
 
 	if (!crtc || !crtc->state)
@@ -3444,7 +3446,7 @@ static void sde_crtc_frame_event_cb(void *data, u32 event, ktime_t ts)
 	crtc_id = drm_crtc_index(crtc);
 
 	SDE_DEBUG("crtc%d\n", crtc->base.id);
-	SDE_EVT32_VERBOSE(DRMID(crtc), event);
+	SDE_EVT32(DRMID(crtc), event);
 
 	spin_lock_irqsave(&sde_crtc->event_spin_lock, flags);
 	fevent = list_first_entry_or_null(&sde_crtc->frame_event_list,
@@ -5880,7 +5882,7 @@ void sde_crtc_commit_kickoff(struct drm_crtc *crtc,
 		 */
 		params.update_dce_pp_mux = cstate->in_loopback_transition ? true : false;
 
-		if (sde_encoder_prepare_for_kickoff(encoder, &params))
+		if (sde_encoder_prepare_for_kickoff(encoder, &params, old_state))
 			sde_crtc->needs_hw_reset = true;
 
 		if (idle_pc_state != IDLE_PC_NONE)
@@ -5910,6 +5912,7 @@ void sde_crtc_commit_kickoff(struct drm_crtc *crtc,
 	_sde_crtc_flush_frame_events(crtc);
 	SDE_ATRACE_END("flush_event_thread");
 	sde_crtc->plane_mask_old = crtc->state->plane_mask;
+	SDE_EVT32(DRMID(crtc), sde_crtc->plane_mask_old);
 
 	if (atomic_inc_return(&sde_crtc->frame_pending) == 1) {
 		/* acquire bandwidth and other resources */
@@ -6362,8 +6365,8 @@ static void _sde_crtc_reset(struct drm_crtc *crtc)
 	/* mark mixer cfgs dirty before wiping them */
 	sde_crtc_clear_cached_mixer_cfg(crtc);
 
-	memset(sde_crtc->mixers, 0, sizeof(sde_crtc->mixers));
 	sde_crtc->num_mixers = 0;
+	memset(sde_crtc->mixers, 0, sizeof(sde_crtc->mixers));
 	sde_crtc->mixers_swapped = false;
 
 	/* disable clk & bw control until clk & bw properties are set */
@@ -9435,7 +9438,7 @@ void __sde_crtc_static_cache_read_work(struct kthread_work *work)
 
 	/* Enable clocks and IRQ and wait for VBLANK */
 	params.affected_displays = _sde_crtc_get_displays_affected(crtc, crtc->state);
-	sde_encoder_prepare_for_kickoff(drm_enc, &params);
+	sde_encoder_prepare_for_kickoff(drm_enc, &params, NULL);
 	sde_encoder_kickoff(drm_enc, false);
 	sde_encoder_wait_for_event(drm_enc, MSM_ENC_VBLANK);
 
@@ -9785,6 +9788,7 @@ static int _sde_crtc_event_disable(struct sde_kms *kms,
 		return ret;
 	}
 
+	mutex_lock(&crtc->crtc_lock);
 	ret = node->func(crtc_drm, false, &node->irq);
 	if (ret) {
 		spin_lock_irqsave(&crtc->spin_lock, flags);
@@ -9793,6 +9797,7 @@ static int _sde_crtc_event_disable(struct sde_kms *kms,
 	} else {
 		kfree(node);
 	}
+	mutex_unlock(&crtc->crtc_lock);
 
 	pm_runtime_put_sync(crtc_drm->dev->dev);
 	return ret;

@@ -11,6 +11,7 @@
 #include "sde_formats.h"
 #include "sde_trace.h"
 #include "sde_cesta.h"
+#include "mi_sde_encoder.h"
 
 #define SDE_DEBUG_CMDENC(e, fmt, ...) SDE_DEBUG("enc%d intf%d " fmt, \
 		(e) && (e)->base.parent ? \
@@ -556,6 +557,8 @@ static void sde_encoder_phys_cmd_te_rd_ptr_irq(void *arg, int irq_idx)
 		return;
 
 	disp_op = sde_encoder_get_disp_op(phys_enc->parent);
+	mi_sde_encoder_save_vsync_info(phys_enc);
+
 	SDE_ATRACE_BEGIN("rd_ptr_irq");
 	cmd_enc = to_sde_encoder_phys_cmd(phys_enc);
 	cesta_client = sde_encoder_get_cesta_client(phys_enc->parent);

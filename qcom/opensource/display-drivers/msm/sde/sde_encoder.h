@@ -650,6 +650,8 @@ struct sde_encoder_virt {
 	struct sde_encoder_vrr_info vrr_info;
 	bool delay_kickoff;
 	bool autorefresh_solver_disable;
+	bool fps_switch_high_to_low;
+	bool update_clocks_on_complete_commit;
 	bool ctl_done_supported;
 
 	unsigned long dynamic_irqs_config;
@@ -758,10 +760,12 @@ int sde_encoder_poll_line_counts(struct drm_encoder *encoder);
  *	Delayed: Block until next trigger can be issued.
  * @encoder:	encoder pointer
  * @params:	kickoff time parameters
+ * @old_crtc_state:	old crtc state pointer
  * @Returns:	Zero on success, last detected error otherwise
  */
 int sde_encoder_prepare_for_kickoff(struct drm_encoder *encoder,
-		struct sde_encoder_kickoff_params *params);
+		struct sde_encoder_kickoff_params *params,
+		struct drm_crtc_state *old_crtc_state);
 
 /**
  * sde_encoder_trigger_kickoff_pending - Clear the flush bits from previous
@@ -805,6 +809,16 @@ int sde_encoder_wait_for_event(struct drm_encoder *drm_encoder,
  * Returns: 0 on success, errorcode otherwise
  */
 int sde_encoder_idle_request(struct drm_encoder *drm_enc);
+
+
+/**
+ * sde_encoder_update_complete_commit - when there is DMS FPS switch in old_crtc_state,
+ *					decrease DSI clocks as per low fps.
+ * @drm_enc: encoder pointer
+ * @old_state: old drm_crtc_state pointer
+ */
+void sde_encoder_update_complete_commit(struct drm_encoder *drm_enc,
+		struct drm_crtc_state *old_state);
 
 /*
  * sde_encoder_get_fps - get interface frame rate of the given encoder
@@ -1264,6 +1278,11 @@ static inline bool sde_encoder_has_dpu_ctl_op_sync(struct drm_encoder *drm_enc)
 	sde_enc = to_sde_encoder_virt(drm_enc);
 	return sde_enc->dpu_ctl_op_sync;
 }
+ * sde_crtc_has_fps_switch_to_low_set - return fps_switch_high_to_low in sde enc
+ * @crtc:	Pointer to drm crtc structure
+ * @Return:	true if there is fps_switch from high_to_low
+ */
+bool sde_crtc_has_fps_switch_to_low_set(struct drm_crtc *crtc);
 
 void sde_encoder_add_data_to_minidump_va(struct drm_encoder *drm_enc);
 

@@ -12,6 +12,9 @@
 #include "dsi_display.h"
 #include "sde_trace.h"
 #include "msm_drv.h"
+#include "mi_sde_encoder.h"
+#include "mi_dsi_display.h"
+#include "mi_panel_id.h"
 #include <drm/drm_fixed.h>
 
 #define SDE_DEBUG_VIDENC(e, fmt, ...) SDE_DEBUG("enc%d intf%d " fmt, \
@@ -52,6 +55,7 @@ static void drm_mode_to_intf_timing_params(
 {
 	const struct sde_encoder_phys *phys_enc = &vid_enc->base;
 	s64 comp_ratio, width;
+	struct dsi_display *display = NULL;
 
 	memset(timing, 0, sizeof(*timing));
 
@@ -102,7 +106,14 @@ static void drm_mode_to_intf_timing_params(
 	timing->hsync_polarity = (mode->flags & DRM_MODE_FLAG_NHSYNC) ? 1 : 0;
 	timing->vsync_polarity = (mode->flags & DRM_MODE_FLAG_NVSYNC) ? 1 : 0;
 	timing->border_clr = 0;
-	timing->underflow_clr = 0xff;
+	display = mi_get_primary_dsi_display();
+	if (display && (mi_get_panel_id_by_dsi_panel(display->panel) == M16T_PANEL_PA ||
+		mi_get_panel_id_by_dsi_panel(display->panel) == N16_PANEL_PA ||
+		mi_get_panel_id_by_dsi_panel(display->panel) == N16_PANEL_PB)) {
+		timing->underflow_clr = 0;
+	} else {
+		timing->underflow_clr = 0xff;
+	}
 	timing->hsync_skew = mode->hskew;
 	timing->v_front_porch_fixed = vid_enc->base.vfp_cached;
 	timing->vrefresh = drm_mode_vrefresh(&phys_enc->cached_mode);
@@ -1437,6 +1448,8 @@ static void sde_encoder_phys_vid_vblank_irq(void *arg, int irq_idx)
 	if (!hw_ctl)
 		return;
 
+	mi_sde_encoder_save_vsync_info(phys_enc);
+
 	SDE_ATRACE_BEGIN("vblank_irq");
 
 	/*
@@ -1562,6 +1575,7 @@ static void sde_encoder_phys_vid_underrun_irq(void *arg, int irq_idx)
 	if (!phys_enc)
 		return;
 
+	SDE_ERROR("underrun_irq, call sde_encoder_underrun_callback()\n");
 	if (phys_enc->parent_ops.handle_underrun_virt)
 		phys_enc->parent_ops.handle_underrun_virt(phys_enc->parent,
 			phys_enc);
@@ -1661,6 +1675,9 @@ static void sde_encoder_phys_vid_cont_splash_mode_set(
 	phys_enc->enable_state = SDE_ENC_ENABLED;
 
 	_sde_encoder_phys_vid_setup_irq_hw_idx(phys_enc);
+
+	phys_enc->kickoff_timeout_ms =
+		sde_encoder_helper_get_kickoff_timeout_ms(phys_enc->parent);
 }
 
 static void sde_encoder_phys_vid_mode_set(

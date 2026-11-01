@@ -145,6 +145,7 @@ struct dsi_phy_cfg {
 	unsigned long bit_clk_rate_hz;
 	struct dsi_split_link_config split_link;
 	u32 data_lanes;
+	unsigned long clk_strength;
 };
 
 struct dsi_phy_hw;
