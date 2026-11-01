@@ -1841,7 +1841,6 @@ void reg_dmav1_setup_dspp_pccv4(struct sde_hw_dspp *ctx, void *cfg)
 		}
 		//Flags unsupported for PCCv4
 		pcc_cfg = hw_cfg->payload;
-		pcc_cfg->flags = 0;
 	}
 	reg_dmav1_setup_dspp_pcc_common(ctx, cfg);
 }
@@ -4873,7 +4872,7 @@ void reg_dmav2_setup_dspp_igcv4(struct sde_hw_dspp *ctx, void *cfg)
 	if (len % transfer_size_bytes)
 		len = len + (transfer_size_bytes - len % transfer_size_bytes);
 
-	data = kvzalloc(len, GFP_KERNEL);
+	data = vzalloc(len);
 	if (!data)
 		return;
 

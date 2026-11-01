@@ -488,6 +488,7 @@ struct msm_display_dsc_info {
 	u32 dsc_4hsmerge_padding;
 	u32 dsc_4hsmerge_alignment;
 	bool half_panel_pu;
+	bool is_nvt;
 };
 
 
@@ -925,6 +926,7 @@ struct msm_display_info {
 
 	uint32_t display_type;
 	bool is_te_using_watchdog_timer;
+	bool switch_vsync_delay;
 	bool poms_align_vsync;
 	struct msm_roi_caps roi_caps;
 
@@ -1114,6 +1116,8 @@ struct msm_drm_private {
 	struct mutex vm_client_lock;
 	struct list_head vm_client_list;
 };
+
+struct drm_connector_state *_msm_get_conn_state(struct drm_crtc_state *crtc_state);
 
 /* get struct msm_kms * from drm_device * */
 #define ddev_to_msm_kms(D) ((D) && (D)->dev_private ? \

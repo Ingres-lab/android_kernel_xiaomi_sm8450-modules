@@ -33,6 +33,8 @@
 #define DSI_CMD_PPS_HDR_SIZE 7
 #define DSI_MODE_MAX 32
 
+#define DIM_PARAM 4094
+
 /*
  * Defining custom dsi msg flag.
  * Using upper byte of flag field for custom DSI flags.
@@ -140,6 +142,7 @@ struct dsi_backlight_config {
 	u32 bl_min_level;
 	u32 bl_max_level;
 	u32 brightness_max_level;
+	u32 brightness_init_level;
 	u32 brightness_default_level;
 	/* current brightness value */
 	u32 brightness;
@@ -149,12 +152,14 @@ struct dsi_backlight_config {
 	u32 bl_level;
 	u32 bl_scale;
 	u32 bl_scale_sv;
+	u32 bl_dcs_subtype;
 	bool bl_inverted_dbv;
 	/* digital dimming backlight LUT */
 	struct drm_msm_dimming_bl_lut *dimming_bl_lut;
 	u32 dimming_min_bl;
 	u32 dimming_status;
 	bool user_disable_notification;
+	bool dimming_enabled;
 
 	int en_gpio;
 	/* PWM params */
@@ -196,6 +201,7 @@ enum esd_check_status_mode {
 
 struct drm_panel_esd_config {
 	bool esd_enabled;
+	bool esd_aod_enabled;
 
 	enum esd_check_status_mode status_mode;
 	struct dsi_panel_cmd_set offset_cmd;
@@ -261,6 +267,8 @@ struct dsi_panel {
 	struct dsi_pinctrl_info pinctrl;
 	struct drm_panel_hdr_properties hdr_props;
 	struct drm_panel_esd_config esd_config;
+	struct drm_panel_cell_id_config cell_id_config;
+	struct drm_panel_wp_config wp_config;
 
 	struct dsi_parser_utils utils;
 
@@ -273,6 +281,7 @@ struct dsi_panel {
 
 	bool panel_initialized;
 	bool te_using_watchdog_timer;
+	bool switch_vsync_delay;
 	struct dsi_qsync_capabilities qsync_caps;
 	struct dsi_avr_capabilities avr_caps;
 
@@ -296,8 +305,6 @@ struct dsi_panel {
 #endif /* CONFIG_DRM_SDE_SPECIFIC_PANEL */
 
 	struct mi_dsi_panel_cfg mi_cfg;
-	struct drm_panel_cell_id_config cell_id_config;
-	struct drm_panel_wp_config wp_config;
 };
 
 static inline bool dsi_panel_ulps_feature_enabled(struct dsi_panel *panel)
@@ -422,6 +429,20 @@ int dsi_panel_switch(struct dsi_panel *panel);
 
 int dsi_panel_post_switch(struct dsi_panel *panel);
 
+// xiaomi add start
+int dsi_panel_gamma_switch(struct dsi_panel *panel);
+
+int dsi_panel_gamma_switch_locked(struct dsi_panel *panel);
+
+int dsi_panel_pre_aod_inVideo(struct dsi_panel *panel);
+
+int dsi_panel_pre_aod_inVideo_locked(struct dsi_panel *panel);
+
+int dsi_panel_post_aod_inVideo(struct dsi_panel *panel);
+
+int dsi_panel_post_aod_inVideo_locked(struct dsi_panel *panel);
+// xiaomi add end
+
 void dsi_dsc_pclk_param_calc(struct msm_display_dsc_info *dsc, int intf_width);
 
 void dsi_panel_bl_handoff(struct dsi_panel *panel);
@@ -451,4 +472,22 @@ int dsi_panel_create_cmd_packets(const char *data, u32 length, u32 count,
 void dsi_panel_destroy_cmd_packets(struct dsi_panel_cmd_set *set);
 
 void dsi_panel_dealloc_cmd_packets(struct dsi_panel_cmd_set *set);
+
+int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
+				enum dsi_cmd_set_type type);
+int dsi_panel_update_backlight(struct dsi_panel *panel,
+				u32 bl_lvl);
+int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
+					enum dsi_cmd_set_type type,
+					struct dsi_parser_utils *utils);
+int dsi_panel_get_cmd_pkt_count(const char *data, u32 length, u32 *cnt);
+int dsi_panel_alloc_cmd_packets(struct dsi_panel_cmd_set *cmd,
+				u32 packet_count);
+int dsi_panel_create_cmd_packets(const char *data,
+				u32 length, u32 count, struct dsi_cmd_desc *cmd);
+void dsi_panel_destroy_cmd_packets(struct dsi_panel_cmd_set *set);
+void dsi_panel_dealloc_cmd_packets(struct dsi_panel_cmd_set *set);
+
+int dsi_panel_get_dfps_cmdsets(struct dsi_panel *panel,
+			u32 index, struct dsi_display_mode *mode);
 #endif /* _DSI_PANEL_H_ */
