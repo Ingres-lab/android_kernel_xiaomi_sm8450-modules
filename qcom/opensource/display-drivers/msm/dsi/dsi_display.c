@@ -18,6 +18,7 @@
 #include "msm_mmu.h"
 #include "dsi_display.h"
 #include "mi_disp_feature.h"
+#include "mi_dsi_display.h"
 #include "mi_disp_print.h"
 #include "mi_backlight_ktz8866.h"
 #include "dsi_panel.h"
@@ -1109,6 +1110,12 @@ int dsi_display_check_status(struct drm_connector *connector, void *display,
 	dsi_display_toggle_error_interrupt_status(dsi_display, false);
 
 	if (status_mode == ESD_MODE_REG_READ) {
+		if (panel->esd_config.offset_cmd.count != 0) {
+			rc = mi_dsi_panel_write_cmd_set(dsi_display->panel,
+					&panel->esd_config.offset_cmd);
+			DSI_DEBUG("write esd reg offset command rc = %d\n", rc);
+		}
+
 		rc = dsi_display_status_reg_read(dsi_display);
 	} else if (status_mode == ESD_MODE_SW_BTA) {
 		rc = dsi_display_status_bta_request(dsi_display);
@@ -6255,6 +6262,14 @@ static int dsi_display_bind(struct device *dev,
 		display->display_type = "primary";
 	}
 
+	rc = mi_disp_feature_attach_display(display,
+			mi_get_disp_id(display->display_type), MI_INTF_DSI);
+	if (rc) {
+		DISP_ERROR("failed to attach %s display(%s intf)\n",
+			get_disp_id_name(mi_get_disp_id(display->display_type)),
+			get_disp_intf_type_name(MI_INTF_DSI));
+	}
+
 	goto error;
 
 error_host_deinit:
@@ -6306,6 +6321,13 @@ static void dsi_display_unbind(struct device *dev,
 
 	/* remove the display from the manager list */
 	dsi_display_manager_unregister(display);
+	rc = mi_disp_feature_detach_display(display,
+			mi_get_disp_id(display->display_type), MI_INTF_DSI);
+	if (rc) {
+		DISP_ERROR("failed to detach %s display(%s intf)\n",
+			get_disp_id_name(mi_get_disp_id(display->display_type)),
+			get_disp_intf_type_name(MI_INTF_DSI));
+	}
 
 	rc = dsi_display_mipi_host_deinit(display);
 	if (rc)
