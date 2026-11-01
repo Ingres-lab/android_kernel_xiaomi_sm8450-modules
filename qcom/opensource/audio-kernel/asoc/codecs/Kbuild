@@ -237,6 +237,14 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-Werror\
 		-D__linux__
 
+ifneq (,$(filter $(TARGET_PRODUCT), ziyi))
+	CDEFINES += -DCONFIG_TARGET_PRODUCT_ZIYI
+endif
+
+ifneq (,$(filter $(TARGET_PRODUCT), yudi))
+        CDEFINES += -DCONFIG_TARGET_PRODUCT_YUDI
+endif
+
 KBUILD_CPPFLAGS += $(CDEFINES)
 
 # Currently, for versions of gcc which support it, the kernel Makefile
@@ -260,6 +268,7 @@ ifeq ($(KERNEL_BUILD), 1)
 	obj-y	+= lpass-cdc/
 	obj-y	+= wsa883x/
 	obj-y	+= rouleur/
+	obj-y   += cs35l41/
 endif
 # Module information used by KBuild framework
 obj-$(CONFIG_WCD9XXX_CODEC_CORE) += wcd_core_dlkm.o
