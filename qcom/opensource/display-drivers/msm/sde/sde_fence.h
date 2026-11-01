@@ -7,6 +7,9 @@
 #ifndef _SDE_FENCE_H_
 #define _SDE_FENCE_H_
 
+struct sde_hw_ctl;
+struct sde_hw_mdp;
+
 #include <linux/kernel.h>
 #include <linux/errno.h>
 #include <linux/mutex.h>

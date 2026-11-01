@@ -220,6 +220,8 @@ enum msm_mdp_crtc_property {
 	CRTC_PROP_FLUSH_SYNC_EN,
 	CRTC_PROP_DISPLAY_OP,
 
+	CRTC_PROP_MI_FOD_SYNC_INFO,
+
 	/* total # of properties */
 	CRTC_PROP_COUNT
 };

@@ -18,6 +18,7 @@
 #include "sde_kms.h"
 #include "sde_fence.h"
 #include "dsi_display.h"
+#include "mi_sde_connector.h"
 
 #define SDE_CONNECTOR_NAME_SIZE	16
 #define SDE_CONNECTOR_DHDR_MEMPOOL_MAX_SIZE	SZ_32
@@ -809,6 +810,9 @@ struct sde_backlight_vrr_update {
  * @b_lvl: brightness property value
  * @bl_dirty_value: brightness final to be set
  */
+void _sde_connector_report_panel_dead(struct sde_connector *conn,
+				      bool panel_dead);
+
 struct sde_connector {
 	struct drm_connector base;
 
@@ -918,6 +922,8 @@ struct sde_connector {
 	bool bl_dirty_change;
 	u32 b_lvl;
 	u32 bl_dirty_value;
+	struct mi_sde_cdev *mi_cdev;
+	struct mi_layer_state mi_layer_state;
 };
 
 /**

@@ -17,6 +17,9 @@
 #include "sde_connector.h"
 #include "msm_mmu.h"
 #include "dsi_display.h"
+#include "mi_disp_feature.h"
+#include "mi_disp_print.h"
+#include "mi_backlight_ktz8866.h"
 #include "dsi_panel.h"
 #include "dsi_ctrl.h"
 #include "dsi_ctrl_hw.h"
@@ -57,6 +60,49 @@ static struct dsi_display_boot_param boot_displays[MAX_DSI_ACTIVE_DISPLAY] = {
 	{.boot_param = dsi_display_primary},
 	{.boot_param = dsi_display_secondary},
 };
+
+char *mi_dsi_display_get_cmdline_panel_info(struct dsi_display *display)
+{
+	char *buffer = NULL, *buffer_dup = NULL;
+	char *pname = NULL;
+	char *panel_info = NULL;
+	int index = DSI_PRIMARY;
+
+	if (!display) {
+		DISP_ERROR("Invalid params\n");
+		return NULL;
+	}
+
+	if (!strcmp(display->display_type, "primary")) {
+		index = DSI_PRIMARY;
+	} else if (!strcmp(display->display_type, "secondary")) {
+		index = DSI_SECONDARY;
+	} else {
+		DISP_ERROR("Invalid display_type params\n");
+		return NULL;
+	}
+
+	buffer = kstrdup(boot_displays[index].boot_param, GFP_KERNEL);
+	if (!buffer)
+		return NULL;
+	buffer_dup = buffer;
+
+	buffer = strrchr(buffer, ',');
+	if (buffer && *buffer)
+		pname = ++buffer;
+	else
+		goto exit;
+
+	buffer = strrchr(pname, ':');
+	if (buffer)
+		*buffer = '\0';
+
+	panel_info = kstrdup(pname, GFP_KERNEL);
+
+exit:
+	kfree(buffer_dup);
+	return panel_info;
+}
 
 static void dsi_display_panel_id_notification(struct dsi_display *display);
 
@@ -1100,7 +1146,7 @@ release_panel_lock:
 	return rc;
 }
 
-static int dsi_display_ctrl_get_host_init_state(struct dsi_display *dsi_display,
+int dsi_display_ctrl_get_host_init_state(struct dsi_display *dsi_display,
 		bool *state)
 {
 	struct dsi_display_ctrl *ctrl;
@@ -1119,7 +1165,7 @@ static int dsi_display_ctrl_get_host_init_state(struct dsi_display *dsi_display,
 	return rc;
 }
 
-static int dsi_display_cmd_rx(struct dsi_display *display,
+int dsi_display_cmd_rx(struct dsi_display *display,
 			      struct dsi_cmd_desc *cmd)
 {
 	struct dsi_display_ctrl *m_ctrl = NULL;
@@ -10156,6 +10202,9 @@ int dsi_display_ctl_post_transition(void *display)
 
 void __init dsi_display_register(void)
 {
+	mi_backlight_ktz8866_init();
+	mi_disp_feature_init();
+
 	dsi_phy_drv_register();
 	dsi_ctrl_drv_register();
 
@@ -10166,6 +10215,7 @@ void __init dsi_display_register(void)
 
 void __exit dsi_display_unregister(void)
 {
+	mi_disp_feature_deinit();
 	platform_driver_unregister(&dsi_display_driver);
 	dsi_ctrl_drv_unregister();
 	dsi_phy_drv_unregister();

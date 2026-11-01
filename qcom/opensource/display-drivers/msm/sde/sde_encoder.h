@@ -589,6 +589,9 @@ struct sde_encoder_virt {
 	enum sde_dsc dirty_dsc_ids[MAX_CHANNELS_PER_ENC];
 	enum sde_vdc dirty_vdc_ids[MAX_CHANNELS_PER_ENC];
 	u32 cur_channel_cnt;
+
+	bool ready_kickoff;
+	bool prepare_kickoff;
 	bool intfs_swapped;
 	bool qdss_status;
 
