@@ -20,3 +20,7 @@
 #define CONFIG_MSM_EXT_DISPLAY 1
 #define CONFIG_DRM_SDE_VM 1
 #define CONFIG_HDCP_QSEECOM 1
+
+/* ingres: Sony panel framework off */
+/* #define CONFIG_DRM_SDE_SPECIFIC_PANEL 1 */
+

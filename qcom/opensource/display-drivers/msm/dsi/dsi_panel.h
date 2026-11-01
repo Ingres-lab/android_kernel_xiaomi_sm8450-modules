@@ -418,8 +418,17 @@ int dsi_panel_update_backlight(struct dsi_panel *panel,
 int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
 				 enum dsi_cmd_set_type type,
 				 struct dsi_parser_utils *utils);
-int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
-			 enum dsi_cmd_set_type type);
+int __dsi_panel_tx_cmd_set(struct dsi_panel *panel,
+			   enum dsi_cmd_set_type type, bool do_peripheral_flush);
+/*
+ * 6.12 sends a cmd set with an explicit peripheral-flush flag; the Xiaomi
+ * (mi_disp) code uses the 2-argument form. Accept both.
+ */
+#define __DSI_TX_CMD_SET_SEL(_1, _2, _3, NAME, ...) NAME
+#define __dsi_panel_tx_cmd_set2(p, t) __dsi_panel_tx_cmd_set(p, t, false)
+#define dsi_panel_tx_cmd_set(...) \
+	__DSI_TX_CMD_SET_SEL(__VA_ARGS__, __dsi_panel_tx_cmd_set, \
+			     __dsi_panel_tx_cmd_set2, unused)(__VA_ARGS__)
 int dsi_panel_set_nolp(struct dsi_panel *panel);
 
 int dsi_panel_prepare(struct dsi_panel *panel);

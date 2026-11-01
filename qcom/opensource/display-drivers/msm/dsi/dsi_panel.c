@@ -548,8 +548,8 @@ int dsi_panel_power_off(struct dsi_panel *panel)
 
 	return rc;
 }
-static int dsi_panel_tx_cmd_set(struct dsi_panel *panel,
-				enum dsi_cmd_set_type type, bool do_peripheral_flush)
+int __dsi_panel_tx_cmd_set(struct dsi_panel *panel,
+			   enum dsi_cmd_set_type type, bool do_peripheral_flush)
 {
 	int rc = 0, i = 0;
 	ssize_t len;
@@ -703,7 +703,7 @@ static int mipi_dsi_dcs_subtype_set_display_brightness(struct mipi_dsi_device *d
 	return mipi_dsi_dcs_write(dsi, bl_dcs_subtype, payload, sizeof(payload));
 }
 
-static int dsi_panel_update_backlight(struct dsi_panel *panel,
+int dsi_panel_update_backlight(struct dsi_panel *panel,
 	u32 bl_lvl)
 {
 	int rc = 0;
@@ -790,6 +790,11 @@ error:
 	return rc;
 }
 
+static u32 __maybe_unused dsi_panel_get_backlight(struct dsi_panel *panel)
+{
+	return panel->bl_config.bl_level;
+}
+
 int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 {
 	int rc = 0;
@@ -797,6 +802,11 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 
 	if (panel->host_config.ext_bridge_mode)
 		return 0;
+
+	if (is_backlight_set_skip(panel, bl_lvl)) {
+		mi_dsi_panel_update_last_bl_level(panel, bl_lvl);
+		return 0;
+	}
 
 	DSI_DEBUG("backlight type:%d lvl:%d\n", bl->type, bl_lvl);
 	switch (bl->type) {
@@ -824,6 +834,8 @@ int dsi_panel_set_backlight(struct dsi_panel *panel, u32 bl_lvl)
 		DSI_ERR("Backlight type(%d) not supported\n", bl->type);
 		rc = -ENOTSUPP;
 	}
+
+	mi_dsi_panel_update_last_bl_level(panel, bl_lvl);
 
 	return rc;
 }
@@ -2475,10 +2487,96 @@ const char *cmd_set_prop_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-fps-switch-command",
 	"qcom,mdss-dsi-em-pulse-switch-command",
 	"Privacy layer not parsed from DTSI, generated dynamically",
-	"Brightness not parsed from DTSI, generated dynamically"
+	"Brightness not parsed from DTSI, generated dynamically",
+	"somc,mdss-dsi-hbm-on-command",
+	"somc,mdss-dsi-hbm-off-command",
+	"somc,mdss-dsi-flm2-on-command",
+	"somc,mdss-dsi-flm2-off-command",
+	"somc,mdss-dsi-hmd-mode1-command",
+	"somc,mdss-dsi-hmd-mode2-command",
+	"somc,mdss-dsi-hmd-off-command",
+	"somc,mdss-dsi-aod-low-command",
+	"somc,mdss-dsi-aod-high-command",
+	"somc,mdss-dsi-timing-switch-command-aod",
+	"qcom,mdss-dsi-panel-status-offset-command",
+	"mi,mdss-dsi-dimmingon-command",
+	"mi,mdss-dsi-dimmingoff-command",
+	"mi,mdss-dsi-hbm-on-command",
+	"mi,mdss-dsi-hbm-off-command",
+	"mi,mdss-dsi-hbm-fod-on-command",
+	"mi,mdss-dsi-hbm-fod-off-command",
+	"mi,mdss-dsi-doze-hbm-command",
+	"mi,mdss-dsi-doze-lbm-command",
+	"mi,mdss-dsi-doze-hbm-nolp-command",
+	"mi,mdss-dsi-doze-lbm-nolp-command",
+	"mi,mdss-dsi-flat-mode-on-command",
+	"mi,mdss-dsi-flat-mode-off-command",
+	"mi,mdss-dsi-flat-mode-on-sec-command",
+	"mi,mdss-dsi-flat-mode-off-sec-command",
+	"mi,mdss-dsi-flat-mode-read-pre-command",
+	"mi,mdss-dsi-flat-mode-off-read-pre-command",
+	"mi,mdss-dsi-dc-on-command",
+	"mi,mdss-dsi-dc-off-command",
+	"mi,mdss-dsi-local-hbm-white-1000nit-giron-pre-read-command",
+	"mi,mdss-dsi-local-hbm-white-1000nit-giroff-pre-read-command",
+	"mi,mdss-dsi-local-hbm-normal-white-1000nit-command",
+	"mi,mdss-dsi-local-hbm-hlpm-white-1000nit-command",
+	"mi,mdss-dsi-local-hbm-normal-white-750nit-command",
+	"mi,mdss-dsi-local-hbm-normal-white-500nit-command",
+	"mi,mdss-dsi-local-hbm-white-110nit-giron-pre-read-command",
+	"mi,mdss-dsi-local-hbm-white-110nit-giroff-pre-read-command",
+	"mi,mdss-dsi-local-hbm-normal-white-110nit-command",
+	"mi,mdss-dsi-local-hbm-hlpm-white-110nit-command",
+	"mi,mdss-dsi-local-hbm-normal-green-500nit-command",
+	"mi,mdss-dsi-local-hbm-off-to-normal-command",
+	"mi,mdss-dsi-local-hbm-off-to-hbm-command",
+	"mi,mdss-dsi-local-hbm-off-to-hlpm-command",
+	"mi,mdss-dsi-local-hbm-off-to-llpm-command",
+	"mi,mdss-dsi-switch-page-command",
+	"mi,mdss-dsi-round-corner-on-command",
+	"mi,mdss-dsi-round-corner-off-command",
+	"mi,mdss-dsi-exit-90fps-timing-switch-command",
+	"mi,mdss-dsi-doze-to-off-command",
+	"mi,mdss-dsi-dimming-8frame-command",
+	"mi,mdss-dsi-dimming-4frame-command",
+	"mi,mdss-dsi-panel-build-id-read-command",
+	"mi,mdss-dsi-4pulse-command",
+	"mi,mdss-dsi-8pulse-command",
+	"mi,mdss-dsi-16pulse-command",
+	"mi,mdss-dsi-panel-flatmode-status-read-command",
+	"mi,mdss-dsi-fps-120-gamma-command",
+	"mi,mdss-dsi-fps-90-gamma-command",
+	"mi,mdss-dsi-fps-60-gamma-command",
+	"qcom,mdss-dsi-dispparam-pen-120hz-command",
+	"qcom,mdss-dsi-dispparam-pen-90hz-command",
+	"qcom,mdss-dsi-dispparam-pen-60hz-command",
+	"qcom,mdss-dsi-dispparam-pen-50hz-command",
+	"qcom,mdss-dsi-dispparam-pen-48hz-command",
+	"qcom,mdss-dsi-dispparam-pen-30hz-command",
+	"mi,mdss-dsi-dispparam-pen-clear-command",
+	"mi,mdss-dsi-aod-enter-command",
+	"mi,mdss-dsi-aod-exit-command",
+	"mi,mdss-dsi-aod-enable-video-trim-command",
+	"mi,mdss-dsi-aod-disable-video-trim-command",
+	"mi,mdss-dsi-cabcuion-command",
+	"mi,mdss-dsi-cabcstillon-command",
+	"mi,mdss-dsi-cabcmovieon-command",
+	"mi,mdss-dsi-cabcoff-command",
+	"mi,mdss-dsi-bl-sync-on-command",
+	"mi,mdss-dsi-bl-sync-off-command",
+	"mi,mdss-dsi-fps-gamma-command",
+	"mi,mdss-dsi-disable-insert-black-command",
+	"mi,mdss-dsi-insert-black-screen-command",
+	"mi,mdss-dsi-panel-cell-id-read-command",
+	"mi,mdss-dsi-panel-cell-id-read-pre-tx-command",
+	"mi,mdss-dsi-3d-lut-mode-command",
+	"mi,mdss-dsi-panel-wp-read-command",
+	"mi,mdss-dsi-panel-wp-read-pre-tx-command",
+	"mi,mdss-dsi-auto-update-gamma-command",
 };
 
 const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
+	/* ingres: must stay index-aligned with enum dsi_cmd_set_type and cmd_set_prop_map */
 	"qcom,mdss-dsi-pre-on-command-state",
 	"qcom,mdss-dsi-on-command-state",
 	"qcom,vid-on-commands-state",
@@ -2523,6 +2621,91 @@ const char *cmd_set_state_map[DSI_CMD_SET_MAX] = {
 	"qcom,mdss-dsi-em-pulse-switch-command-state",
 	"Privacy layer not parsed from DTSI, generated dynamically",
 	"Brightness not parsed from DTSI, generated dynamically",
+	"somc,mdss-dsi-hbm-on-command-state",
+	"somc,mdss-dsi-hbm-off-command-state",
+	"somc,mdss-dsi-flm2-on-command-state",
+	"somc,mdss-dsi-flm2-off-command-state",
+	"somc,mdss-dsi-hmd-mode1-command-state",
+	"somc,mdss-dsi-hmd-mode2-command-state",
+	"somc,mdss-dsi-hmd-off-command-state",
+	"somc,mdss-dsi-aod-low-command-state",
+	"somc,mdss-dsi-aod-high-command-state",
+	"somc,mdss-dsi-timing-switch-command-aod-state",
+	"qcom,mdss-dsi-panel-status-offset-command-state",
+	"mi,mdss-dsi-dimmingon-command-state",
+	"mi,mdss-dsi-dimmingoff-command-state",
+	"mi,mdss-dsi-hbm-on-command-state",
+	"mi,mdss-dsi-hbm-off-command-state",
+	"mi,mdss-dsi-hbm-fod-on-command-state",
+	"mi,mdss-dsi-hbm-fod-off-command-state",
+	"mi,mdss-dsi-doze-hbm-command-state",
+	"mi,mdss-dsi-doze-lbm-command-state",
+	"mi,mdss-dsi-doze-hbm-nolp-command-state",
+	"mi,mdss-dsi-doze-lbm-nolp-command-state",
+	"mi,mdss-dsi-flat-mode-on-command-state",
+	"mi,mdss-dsi-flat-mode-off-command-state",
+	"mi,mdss-dsi-flat-mode-on-sec-command-state",
+	"mi,mdss-dsi-flat-mode-off-sec-command-state",
+	"mi,mdss-dsi-flat-mode-read-pre-command-state",
+	"mi,mdss-dsi-flat-mode-off-read-pre-command-state",
+	"mi,mdss-dsi-dc-on-command-state",
+	"mi,mdss-dsi-dc-off-command-state",
+	"mi,mdss-dsi-local-hbm-white-1000nit-giron-pre-read-command-state",
+	"mi,mdss-dsi-local-hbm-white-1000nit-giroff-pre-read-command-state",
+	"mi,mdss-dsi-local-hbm-normal-white-1000nit-command-state",
+	"mi,mdss-dsi-local-hbm-hlpm-white-1000nit-command-state",
+	"mi,mdss-dsi-local-hbm-normal-white-750nit-command-state",
+	"mi,mdss-dsi-local-hbm-normal-white-500nit-command-state",
+	"mi,mdss-dsi-local-hbm-white-110nit-giron-pre-read-command-state",
+	"mi,mdss-dsi-local-hbm-white-110nit-giroff-pre-read-command-state",
+	"mi,mdss-dsi-local-hbm-normal-white-110nit-command-state",
+	"mi,mdss-dsi-local-hbm-hlpm-white-110nit-command-state",
+	"mi,mdss-dsi-local-hbm-normal-green-500nit-command-state",
+	"mi,mdss-dsi-local-hbm-off-to-normal-command-state",
+	"mi,mdss-dsi-local-hbm-off-to-hbm-command-state",
+	"mi,mdss-dsi-local-hbm-off-to-hlpm-command-state",
+	"mi,mdss-dsi-local-hbm-off-to-llpm-command-state",
+	"mi,mdss-dsi-switch-page-command-state",
+	"mi,mdss-dsi-round-corner-on-command-state",
+	"mi,mdss-dsi-round-corner-off-command-state",
+	"mi,mdss-dsi-exit-90fps-timing-switch-command-state",
+	"mi,mdss-dsi-doze-to-off-command-state",
+	"mi,mdss-dsi-dimming-8frame-command-state",
+	"mi,mdss-dsi-dimming-4frame-command-state",
+	"mi,mdss-dsi-panel-build-id-read-command-state",
+	"mi,mdss-dsi-4pulse-command-state",
+	"mi,mdss-dsi-8pulse-command-state",
+	"mi,mdss-dsi-16pulse-command-state",
+	"mi,mdss-dsi-panel-flatmode-status-read-command-state",
+	"mi,mdss-dsi-fps-120-gamma-command-state",
+	"mi,mdss-dsi-fps-90-gamma-command-state",
+	"mi,mdss-dsi-fps-60-gamma-command-state",
+	"qcom,mdss-dsi-dispparam-pen-120hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-90hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-60hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-50hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-48hz-command-state",
+	"qcom,mdss-dsi-dispparam-pen-30hz-command-state",
+	"mi,mdss-dsi-dispparam-pen-clear-command-state",
+	"mi,mdss-dsi-aod-enter-command-state",
+	"mi,mdss-dsi-aod-exit-command-state",
+	"mi,mdss-dsi-aod-enable-video-trim-command-state",
+	"mi,mdss-dsi-aod-disable-video-trim-command-state",
+	"mi,mdss-dsi-cabcuion-command-state",
+	"mi,mdss-dsi-cabcstillon-command-state",
+	"mi,mdss-dsi-cabcmovieon-command-state",
+	"mi,mdss-dsi-cabcoff-command-state",
+	"mi,mdss-dsi-bl-sync-on-command-state",
+	"mi,mdss-dsi-bl-sync-off-command-state",
+	"mi,mdss-dsi-fps-gamma-command-state",
+	"mi,mdss-dsi-disable-insert-black-command-state",
+	"mi,mdss-dsi-insert-black-screen-command-state",
+	"mi,mdss-dsi-panel-cell-id-read-command-state",
+	"mi,mdss-dsi-panel-cell-id-read-pre-tx-command-state",
+	"mi,mdss-dsi-3d-lut-mode-command-state",
+	"mi,mdss-dsi-panel-wp-read-command-state",
+	"mi,mdss-dsi-panel-wp-read-pre-tx-command-state",
+	"mi,mdss-dsi-auto-update-gamma-command-state",
 };
 
 int dsi_panel_get_cmd_pkt_count(const char *data, u32 length, u32 *cnt)
@@ -2629,7 +2812,7 @@ int dsi_panel_alloc_cmd_packets(struct dsi_panel_cmd_set *cmd,
 	return 0;
 }
 
-static int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
+int dsi_panel_parse_cmd_sets_sub(struct dsi_panel_cmd_set *cmd,
 					enum dsi_cmd_set_type type,
 					struct dsi_parser_utils *utils)
 {
@@ -4634,6 +4817,8 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
 
 	mutex_init(&panel->panel_lock);
 
+	mi_dsi_panel_init(panel);
+
 	return panel;
 error:
 	kfree(panel);
@@ -5404,6 +5589,8 @@ error:
 int dsi_panel_set_lp1(struct dsi_panel *panel)
 {
 	int rc = 0;
+	int bl_lvl __maybe_unused;
+	struct drm_ext_event event __maybe_unused;
 
 	if (!panel) {
 		DSI_ERR("invalid params\n");
@@ -5489,6 +5676,7 @@ exit:
 int dsi_panel_set_nolp(struct dsi_panel *panel)
 {
 	int rc = 0;
+	struct drm_ext_event event __maybe_unused;
 
 	if (!panel) {
 		DSI_ERR("invalid params\n");
@@ -6343,3 +6531,31 @@ error:
 	mutex_unlock(&panel->panel_lock);
 	return rc;
 }
+
+const char *cmd_set_update_map[DSI_CMD_UPDATE_MAX] = {
+	"qcom,mdss-dsi-nolp-command-update",
+	"qcom,mdss-dsi-timing-switch-command-update",
+	"mi,mdss-dsi-hbm-on-command-update",
+	"mi,mdss-dsi-hbm-off-command-update",
+	"mi,mdss-dsi-hbm-fod-on-command-update",
+	"mi,mdss-dsi-hbm-fod-off-command-update",
+	"mi,mdss-dsi-doze-hbm-command-update",
+	"mi,mdss-dsi-doze-lbm-command-update",
+	"mi,mdss-dsi-doze-hbm-nolp-command-update",
+	"mi,mdss-dsi-doze-lbm-nolp-command-update",
+	"mi,mdss-dsi-flat-mode-on-command-update",
+	"mi,mdss-dsi-flat-mode-off-command-update",
+	"mi,mdss-dsi-dc-on-command-update",
+	"mi,mdss-dsi-dc-off-command-update",
+	"mi,mdss-dsi-local-hbm-normal-white-1000nit-command-update",
+	"mi,mdss-dsi-local-hbm-hlpm-white-1000nit-command-update",
+	"mi,mdss-dsi-local-hbm-hlpm-white-1000nit-command-b2-update",
+	"mi,mdss-dsi-local-hbm-normal-white-110nit-command-update",
+	"mi,mdss-dsi-local-hbm-hlpm-white-110nit-command-update",
+	"mi,mdss-dsi-local-hbm-hlpm-white-110nit-command-b2-update",
+	"mi,mdss-dsi-local-hbm-normal-green-500nit-command-update",
+	"mi,mdss-dsi-local-hbm-off-to-normal-command-update",
+	"mi,mdss-dsi-local-hbm-off-to-hbm-command-update",
+	"mi,mdss-dsi-switch-page-command-update",
+	"mi,mdss-dsi-3d-lut-mode-command-update",
+};
