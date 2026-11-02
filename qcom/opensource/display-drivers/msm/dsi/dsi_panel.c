@@ -4718,6 +4718,10 @@ error:
 	return rc;
 }
 
+/* ESD check off until the 6.6 ESD IRQ is fixed; msm_drm.disable_esd=0 re-enables it */
+static bool disable_esd = true;
+module_param(disable_esd, bool, 0444);
+
 static int dsi_panel_parse_esd_config(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -4734,6 +4738,10 @@ static int dsi_panel_parse_esd_config(struct dsi_panel *panel)
 
 	esd_config->esd_enabled = utils->read_bool(utils->data,
 		"qcom,esd-check-enabled");
+	if (disable_esd) {
+		pr_info("ESD check disabled (disable_esd=1)\n");
+		esd_config->esd_enabled = false;
+	}
 
 	esd_config->esd_aod_enabled = utils->read_bool(utils->data,
 		"qcom,esd-aod-check-enabled");
