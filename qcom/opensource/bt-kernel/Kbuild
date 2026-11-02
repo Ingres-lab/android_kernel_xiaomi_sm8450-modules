@@ -4,6 +4,12 @@ export CONFIG_BTFM_SLIM := m
 export CONFIG_I2C_RTC6226_QCA := m
 endif
 
+# ingres (waipio): btfmslim_slave is required by the sound card's SLIMbus 7 link
+ifeq ($(CONFIG_ARCH_WAIPIO), y)
+export CONFIG_MSM_BT_POWER := m
+export CONFIG_BTFM_SLIM := m
+endif
+
 ifeq ($(CONFIG_MSM_BT_POWER),m)
 KBUILD_CPPFLAGS += -DCONFIG_MSM_BT_POWER
 endif
