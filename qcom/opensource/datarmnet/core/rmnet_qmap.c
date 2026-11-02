@@ -32,11 +32,18 @@ int rmnet_qmap_send(struct sk_buff *skb, u8 ch, bool flush)
 	if (ch != RMNET_CH_CTL && real_data_dev) {
 		skb->protocol = htons(ETH_P_MAP);
 		skb->dev = real_data_dev;
-		rmnet_ctl->log(RMNET_CTL_LOG_DEBUG, "TXI", 0, skb->data,
-			       skb->len);
+		if (rmnet_ctl && rmnet_ctl->log)
+			rmnet_ctl->log(RMNET_CTL_LOG_DEBUG, "TXI", 0, skb->data,
+				       skb->len);
 
 		rmnet_map_tx_qmap_cmd(skb, ch, flush);
 		return 0;
+	}
+
+	/* rmnet_ctl may be missing; don't oops in the powersave worker */
+	if (!rmnet_ctl || !rmnet_ctl->send) {
+		kfree_skb(skb);
+		return -ECOMM;
 	}
 
 	if (rmnet_ctl->send(rmnet_ctl_handle, skb)) {
