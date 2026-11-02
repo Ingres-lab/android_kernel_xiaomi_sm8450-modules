@@ -2286,14 +2286,27 @@ int wm_adsp_write_ctl(struct wm_adsp *dsp, const char *name, int type,
 		snprintf(ctl_name, SNDRV_CTL_ELEM_ID_NAME_MAXLEN, "%s",
 			 ctl->name);
 
-	kcontrol = snd_soc_card_get_kcontrol(dsp->component->card, ctl_name);
+	/*
+	 * 6.6 takes controls_rwsem in snd_soc_card_get_kcontrol(), and
+	 * snd_ctl_elem_write() holds it for write while calling a put
+	 * handler, so callers reached from a put (fast switch, channel swap)
+	 * deadlock here. The notify is advisory: skip it when the lock is held.
+	 */
+	if (!down_read_trylock(&dsp->component->card->snd_card->controls_rwsem)) {
+		adsp_dbg(dsp, "controls locked, not notifying %s\n", ctl_name);
+		return ret;
+	}
+	kcontrol = snd_soc_card_get_kcontrol_locked(dsp->component->card,
+						    ctl_name);
+	if (kcontrol)
+		snd_ctl_notify(dsp->component->card->snd_card,
+			       SNDRV_CTL_EVENT_MASK_VALUE, &kcontrol->id);
+	up_read(&dsp->component->card->snd_card->controls_rwsem);
+
 	if (!kcontrol) {
 		adsp_err(dsp, "Can't find kcontrol %s\n", ctl_name);
 		return -EINVAL;
 	}
-
-	snd_ctl_notify(dsp->component->card->snd_card,
-		       SNDRV_CTL_EVENT_MASK_VALUE, &kcontrol->id);
 
 	return ret;
 }
