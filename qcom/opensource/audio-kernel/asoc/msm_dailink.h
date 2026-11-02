@@ -247,11 +247,8 @@ SND_SOC_DAILINK_DEFS(proxy_rx,
 
 SND_SOC_DAILINK_DEFS(pri_mi2s_rx,
 	DAILINK_COMP_ARRAY(COMP_CPU("snd-soc-dummy-dai")),
-#if 0
+	/* ingres: stub codec as in Xiaomi 5.10 (Sony used its cs40l2x haptics here) */
 	DAILINK_COMP_ARRAY(COMP_CODEC("msm-stub-codec.1", "msm-stub-rx")),
-#else
-	DAILINK_COMP_ARRAY(COMP_CODEC("cs40l2x-codec", "cs40l2x-pcm")),
-#endif
 	DAILINK_COMP_ARRAY(COMP_PLATFORM("snd-soc-dummy")));
 
 SND_SOC_DAILINK_DEFS(pri_mi2s_tx,
