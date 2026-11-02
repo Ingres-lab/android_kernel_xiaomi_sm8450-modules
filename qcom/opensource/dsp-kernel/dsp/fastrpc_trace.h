@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0-only */
-/* Copyright (c) 2019-2021, The Linux Foundation. All rights reserved.
- * Copyright (c) 2022, 2024 Qualcomm Innovation Center, Inc. All rights reserved.
+/*
+ * Copyright (c) 2019-2021, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2022, Qualcomm Innovation Center, Inc. All rights reserved.
  */
 
 #if !defined(TRACE_FASTRPC_H) || defined(TRACE_HEADER_MULTI_READ)
@@ -25,6 +26,7 @@
 #define TRACE_INCLUDE_FILE fastrpc_trace
 
 #include <linux/tracepoint.h>
+#include <linux/version.h>
 
 TRACE_EVENT(fastrpc_transport_send,
 
@@ -177,26 +179,24 @@ TRACE_EVENT(fastrpc_dma_map,
 
 TRACE_EVENT(fastrpc_dma_unmap,
 
-	TP_PROTO(int cid, uint64_t phys, size_t size, int fd),
+	TP_PROTO(int cid, uint64_t phys, size_t size),
 
-	TP_ARGS(cid, phys, size, fd),
+	TP_ARGS(cid, phys, size),
 
 	TP_STRUCT__entry(
 		__field(int, cid)
 		__field(u64, phys)
 		__field(size_t, size)
-		__field(int, fd)
 	),
 
 	TP_fast_assign(
 		__entry->cid = cid;
 		__entry->phys = phys;
 		__entry->size = size;
-		__entry->fd = fd;
 	),
 
-	TP_printk("cid %d, phys 0x%llx, size %zu, fd %d",
-		__entry->cid, __entry->phys, __entry->size, __entry->fd)
+	TP_printk("cid %d, phys 0x%llx, size %zu",
+		__entry->cid, __entry->phys, __entry->size)
 );
 
 TRACE_EVENT(fastrpc_dma_alloc,
@@ -386,7 +386,14 @@ TRACE_EVENT(fastrpc_msg,
 		memcpy(__get_str(buf), (message), (sizeof(message) - 1));
 		__get_str(buf)[sizeof(message) - 1] = '\0';
 #else
-		__assign_str(buf, message);
+		if (message)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 10, 0)
+			__assign_str(buf);
+#else
+			__assign_str_len(buf, message, (sizeof(message) - 1));
+#endif
+		else
+			memcpy(__get_str(buf), "(null)", sizeof("(null)"));
 #endif
 	),
 	TP_printk(" %s", __get_str(buf))
@@ -411,7 +418,14 @@ TRACE_EVENT(fastrpc_dspsignal,
 		memcpy(__get_str(buf), (event), (sizeof(event) - 1));
 		__get_str(buf)[sizeof(event) - 1] = '\0';
 #else
-		__assign_str(buf, event);
+		if (event)
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 10, 0)
+			__assign_str(buf);
+#else
+			__assign_str_len(buf, event, (sizeof(event) - 1));
+#endif
+		else
+			memcpy(__get_str(buf), "(null)", sizeof("(null)"));
 #endif
 		__entry->signal_id = signal_id;
 		__entry->state = state;

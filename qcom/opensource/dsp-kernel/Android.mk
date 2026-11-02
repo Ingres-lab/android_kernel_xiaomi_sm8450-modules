@@ -6,14 +6,13 @@ ifeq ($(TARGET_KERNEL_DLKM_DISABLE), true)
 	endif
 endif
 
+ifneq ($(ENABLE_HYP), true)
 ifeq ($(FASTRPC_DLKM_ENABLED), true)
-BOARD_COMMON_DIR ?= device/qcom/common
-BOARD_OPENSOURCE_DIR ?= vendor/qcom/opensource
-DLKM_DIR   := $(BOARD_COMMON_DIR)/dlkm
+DLKM_DIR   := device/qcom/common/dlkm
 
 LOCAL_PATH := $(call my-dir)
 
-DSP_BLD_DIR := $(abspath .)/$(BOARD_OPENSOURCE_DIR)/dsp-kernel
+DSP_BLD_DIR := $(abspath .)/vendor/qcom/opensource/dsp-kernel
 
 LOCAL_MODULE_DDK_BUILD := true
 
@@ -30,7 +29,7 @@ include $(CLEAR_VARS)
 $(info DLKM_DIR = $(DLKM_DIR))
 LOCAL_SRC_FILES   := $(wildcard $(LOCAL_PATH)/**/*) $(wildcard $(LOCAL_PATH)/*)
 LOCAL_MODULE      := frpc-adsprpc.ko
-LOCAL_EXPORT_KO_INCLUDE_DIRS    := $(LOCAL_PATH)/include/
+LOCAL_EXPORT_KO_INCLUDE_DIRS    := $(LOCAL_PATH)/include/linux
 LOCAL_MODULE_KBUILD_NAME := frpc-adsprpc.ko
 LOCAL_MODULE_PATH := $(KERNEL_MODULES_OUT)
 KBUILD_OPTIONS += DSP_ROOT=$(DSP_BLD_DIR)
@@ -51,5 +50,7 @@ include $(DLKM_DIR)/Build_external_kernelmodule.mk
 $(info KBUILD_OPTIONS = $(KBUILD_OPTIONS))
 $(info intermediates dsp symvers path = $(call intermediates-dir-for,DLKM,dsp-module-symvers))
 $(info DLKM_DIR = $(DLKM_DIR))
+
+endif
 
 endif

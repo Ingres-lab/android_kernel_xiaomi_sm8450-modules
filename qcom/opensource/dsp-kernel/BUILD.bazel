@@ -1,18 +1,11 @@
 # Bazel file for fastrpc
-# Two modules to be exported - fastrpc, cdsp-loader
-
-load("//build/kernel/kleaf:kernel.bzl", "ddk_headers")
+# Three modules to be exported - frpc-adsprpc,
+# cdsp-loader and frpc-trusted
 
 package(
     default_visibility = [
         "//visibility:public",
     ],
-)
-
-ddk_headers(
-    name = "fastrpc_headers",
-    hdrs = glob(["include/linux/*.h"]),
-    includes = ["include"],
 )
 
 load(":define_modules.bzl", "define_modules")
@@ -25,28 +18,26 @@ define_modules("blair", "consolidate")
 
 define_modules("blair", "gki")
 
-define_modules("sun", "consolidate")
+define_modules("holi", "consolidate")
 
-define_modules("sun", "perf")
+define_modules("holi", "gki")
 
-define_modules("tuna", "consolidate")
+define_modules("cliffs", "consolidate")
 
-define_modules("tuna", "perf")
+define_modules("cliffs", "gki")
 
-define_modules("kera", "consolidate")
+define_modules("pitti", "consolidate")
 
-define_modules("kera", "perf")
+define_modules("pitti", "gki")
 
-define_modules("niobe", "consolidate")
+define_modules("volcano", "consolidate")
 
-define_modules("niobe", "gki")
+define_modules("volcano", "gki")
 
-define_modules("monaco", "consolidate")
+define_modules("anorak", "consolidate")
 
-define_modules("monaco", "perf")
+define_modules("anorak", "gki")
 
-define_modules("parrot", "consolidate")
+define_modules("neo-la", "consolidate")
 
-define_modules("parrot", "gki")
-
-define_modules("waipio", "perf")
+define_modules("neo-la", "gki")
