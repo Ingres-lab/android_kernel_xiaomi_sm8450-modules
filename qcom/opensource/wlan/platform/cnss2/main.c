@@ -7278,10 +7278,13 @@ static void cnss_get_pm_domain_info(struct cnss_plat_data *plat_priv)
 
 static bool cnss_use_fw_path_with_prefix(struct cnss_plat_data *plat_priv)
 {
+	/*
+	 * Not "qcom,same-dt-multi-dev": waipio sets it, but the firmware
+	 * partition is flat (amss20.bin, not qca6490/amss20.bin), and 6.6 MHI
+	 * has no fallback-image retry without the prefix.
+	 */
 	return (of_property_read_bool(plat_priv->plat_dev->dev.of_node,
 				      "qcom,converged-dt") ||
-		of_property_read_bool(plat_priv->plat_dev->dev.of_node,
-				      "qcom,same-dt-multi-dev") ||
 		of_property_read_bool(plat_priv->plat_dev->dev.of_node,
 				      "qcom,multi-wlan-exchg"));
 }

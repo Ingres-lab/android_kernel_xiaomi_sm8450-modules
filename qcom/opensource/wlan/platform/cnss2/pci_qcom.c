@@ -601,8 +601,22 @@ int cnss_pci_get_iommu_addr(struct cnss_pci_data *pci_priv,
 
 	of_node = of_find_node_by_name(pci_dev->dev.of_node,
 				       "cnss_pci0_iommu_region_partition");
-	if (!of_node)
-		return -EINVAL;
+	if (!of_node) {
+		u32 addr_win[2];
+		int ret;
+
+		/* 5.10-style DT: window from the iommu group node */
+		if (!iommu_group_node)
+			return -EINVAL;
+		ret = of_property_read_u32_array(iommu_group_node,
+						 "qcom,iommu-dma-addr-pool",
+						 addr_win, ARRAY_SIZE(addr_win));
+		if (ret)
+			return ret;
+		pci_priv->smmu_iova_start = addr_win[0];
+		pci_priv->smmu_iova_len = addr_win[1];
+		return 0;
+	}
 
 	maps = of_get_property(of_node, "iommu-addresses", &size);
 	if (!maps) {
