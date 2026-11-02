@@ -5078,9 +5078,16 @@ int dsi_panel_pre_prepare(struct dsi_panel *panel)
 	rc = dsi_panel_driver_pre_power_on(panel);
 #endif /* CONFIG_DRM_SDE_SPECIFIC_PANEL */
 
-	/* If LP11_INIT is set, panel will be powered up during prepare() */
+#ifdef CONFIG_DRM_SDE_SPECIFIC_PANEL
+	/*
+	 * Sony's panel driver powers LP11_INIT panels in prepare(); the
+	 * generic prepare() only resets them, so without it (ingres) the
+	 * panel must be powered here, as in 5.10, or it stays off after
+	 * the first blank.
+	 */
 	if (panel->lp11_init)
 		goto error;
+#endif /* CONFIG_DRM_SDE_SPECIFIC_PANEL */
 
 	rc = dsi_panel_power_on(panel);
 	if (rc) {
