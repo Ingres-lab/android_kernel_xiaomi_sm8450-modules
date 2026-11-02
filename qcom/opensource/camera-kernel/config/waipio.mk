@@ -16,6 +16,11 @@ ccflags-y += -DCONFIG_SPECTRA_SENSOR=1
 
 # External Dependencies
 KBUILD_CPPFLAGS += -DCONFIG_MSM_MMRM=1
+# 6.6: synx is the external synx-kernel module (v1 API on waipio), not in-tree;
+# CamX EVA binds CSL fences to synx, so cam_sync must register its bind ops.
+KBUILD_CPPFLAGS += -DCONFIG_MSM_GLOBAL_SYNX=1
+ccflags-y += -I$(CAMERA_KERNEL_ROOT)/../synx-kernel/msm/synx \
+	     -I$(CAMERA_KERNEL_ROOT)/../synx-kernel/include/uapi/synx
 
 ifeq ($(TARGET_PRODUCT), zizhan)
 KBUILD_CPPFLAGS += -DZIZHAN_CAMERA=1

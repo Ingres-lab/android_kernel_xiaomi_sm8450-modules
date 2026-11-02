@@ -47,8 +47,8 @@
  */
 #define CAM_REQ_MGR_MAX_HANDLES           64
 #define CAM_REQ_MGR_MAX_HANDLES_V2        256
-/* sony extension begin */
-#if 1
+/* sony extension begin (disabled: Xiaomi CamX uses 2 links, ioctl size check) */
+#if 0
 #define MAX_LINKS_PER_SESSION             4
 #else
 #define MAX_LINKS_PER_SESSION             2
