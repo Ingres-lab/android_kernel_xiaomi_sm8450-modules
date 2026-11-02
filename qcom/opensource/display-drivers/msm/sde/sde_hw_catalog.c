@@ -6961,6 +6961,13 @@ static int sde_hw_ver_parse_dt(struct drm_device *dev, struct device_node *np,
 		cfg->ubwc_rev = PROP_VALUE_ACCESS(prop_value, SDE_HW_UBWC_VERSION, 0);
 	else
 		cfg->ubwc_rev = DEFAULT_SDE_UBWC_NONE;
+	/*
+	 * Older (5.10-era) DTs such as waipio's give the short form 0x400;
+	 * convert it to the SDE_HW_UBWC_VER() encoding the checks expect,
+	 * otherwise UBWC 4.0 is not detected and the decoder runs as 2.0.
+	 */
+	if (cfg->ubwc_rev && cfg->ubwc_rev <= 0xfff)
+		cfg->ubwc_rev = SDE_HW_UBWC_VER(cfg->ubwc_rev);
 
 	if (prop_exists[SDE_HW_QULTIVATE_VERSION])
 		cfg->qultivate_rev = PROP_VALUE_ACCESS(prop_value, SDE_HW_QULTIVATE_VERSION, 0);
