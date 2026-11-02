@@ -229,6 +229,8 @@ endif
 
 ifneq (,$(filter $(TARGET_PRODUCT), ingres))
 	CDEFINES += -DCONFIG_TARGET_PRODUCT_INGRES
+	# Xiaomi drives the CS35L41 amps over TERT TDM, not Sony's WSA MI2S
+	CDEFINES += -DENABLE_WSA
 endif
 
 ifneq (,$(filter $(TARGET_PRODUCT), zizhan))
