@@ -4164,6 +4164,13 @@ static void _sde_top_parse_dt_helper(struct sde_mdss_cfg *cfg,
 	cfg->ubwc_rev = props->exists[UBWC_VERSION] ?
 			PROP_VALUE_ACCESS(props->values,
 			UBWC_VERSION, 0) : DEFAULT_SDE_UBWC_NONE;
+	/*
+	 * Older (5.10-era) DTs such as waipio's give the short form 0x400;
+	 * convert it to the SDE_HW_UBWC_VER() encoding the checks expect,
+	 * otherwise UBWC 4.0 is not detected and the decoder runs as 2.0.
+	 */
+	if (cfg->ubwc_rev && cfg->ubwc_rev <= 0xfff)
+		cfg->ubwc_rev = SDE_HW_UBWC_VER(cfg->ubwc_rev);
 
 	cfg->mdp[0].highest_bank_bit = DEFAULT_SDE_HIGHEST_BANK_BIT;
 
