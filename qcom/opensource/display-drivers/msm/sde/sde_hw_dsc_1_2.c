@@ -296,6 +296,9 @@ static void sde_hw_dsc_config(struct sde_hw_dsc *hw_dsc,
 		data |= BIT(12);
 	if (mode & DSC_MODE_MULTIPLEX)
 		data |= BIT(13);
+	/* command mode flag, as in 5.10 and upstream dpu_hw_dsc_1_2 */
+	if (!(mode & DSC_MODE_VIDEO))
+		data |= BIT(17);
 
 	SDE_REG_WRITE(dsc_c, DSC_CFG + idx, data);
 
