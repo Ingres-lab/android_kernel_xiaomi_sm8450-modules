@@ -119,8 +119,10 @@ int mi_sde_connector_register_esd_irq(struct sde_connector *c_conn)
 				display->panel->mi_cfg.esd_err_irq_flags,
 				"esd_err_irq", c_conn);
 			if (rc) {
-				DISP_ERROR("%s display register esd irq failed\n",
-					display->display_type);
+				DISP_ERROR("%s display register esd irq failed, rc=%d\n",
+					display->display_type, rc);
+				/* never toggle an IRQ we do not own */
+				display->panel->mi_cfg.esd_err_irq = 0;
 			} else {
 				DISP_INFO("%s display register esd irq success\n",
 					display->display_type);
@@ -135,8 +137,9 @@ int mi_sde_connector_register_esd_irq(struct sde_connector *c_conn)
 					display->panel->mi_cfg.esd_err_irq_flags_second,
 					"esd_err_irq_second", c_conn);
 				if (rc) {
-					DISP_ERROR("%s display register esd irq second failed\n",
-						display->display_type);
+					DISP_ERROR("%s display register esd irq second failed, rc=%d\n",
+						display->display_type, rc);
+					display->panel->mi_cfg.esd_err_irq_second = 0;
 				} else {
 					DISP_INFO("%s display register esd irq second success\n",
 						display->display_type);
