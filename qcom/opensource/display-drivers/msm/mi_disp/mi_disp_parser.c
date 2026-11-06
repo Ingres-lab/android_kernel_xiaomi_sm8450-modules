@@ -8,6 +8,7 @@
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
+#include <linux/interrupt.h>
 #include <linux/of_gpio.h>
 
 #include "mi_disp_print.h"
@@ -22,6 +23,25 @@
 #define SMEM_SW_DISPLAY_LOCKDOWN_TABLE 500
 #define SMEM_SW_DISPLAY_VDC_TABLE 501
 
+/*
+ * 5.10 read the IRQ trigger flags from the gpio specifier's flags cell via
+ * of_get_named_gpio_flags() (e.g. <&tlmm 116 0x2008> = IRQF_ONESHOT |
+ * IRQF_TRIGGER_LOW). 6.6 dropped that API; without the flags the threaded
+ * IRQ request (NULL primary handler, no IRQF_ONESHOT) fails with -EINVAL and
+ * every panel on/off then enables/disables an unrequested GPIO IRQ, tripping
+ * the gpiolib FLAG_USED_AS_IRQ WARN_ON. Read the cell back explicitly.
+ */
+static int mi_dsi_panel_read_esd_irq_flags(struct device_node *np,
+					   const char *prop)
+{
+	u32 flags = 0;
+
+	if (of_property_read_u32_index(np, prop, 2, &flags))
+		flags = IRQF_TRIGGER_LOW;
+
+	return flags | IRQF_ONESHOT;
+}
+
 int mi_dsi_panel_parse_esd_gpio_config(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -30,6 +50,8 @@ int mi_dsi_panel_parse_esd_gpio_config(struct dsi_panel *panel)
 
 	mi_cfg->esd_err_irq_gpio = of_get_named_gpio(utils->data, "mi,esd-err-irq-gpio", 0);
 	if (gpio_is_valid(mi_cfg->esd_err_irq_gpio)) {
+		mi_cfg->esd_err_irq_flags = mi_dsi_panel_read_esd_irq_flags(
+				utils->data, "mi,esd-err-irq-gpio");
 		mi_cfg->esd_err_irq = gpio_to_irq(mi_cfg->esd_err_irq_gpio);
 		rc = gpio_request(mi_cfg->esd_err_irq_gpio, "esd_err_irq_gpio");
 		if (rc)
@@ -44,6 +66,8 @@ int mi_dsi_panel_parse_esd_gpio_config(struct dsi_panel *panel)
 	if( !strcmp(panel->name,"xiaomi m80 42 02 0a video mode dual dsi dphy panel")){
 		mi_cfg->esd_err_irq_gpio_second = of_get_named_gpio(utils->data, "mi,esd-err-irq-gpio-second", 0);
 		if (gpio_is_valid(mi_cfg->esd_err_irq_gpio_second)) {
+			mi_cfg->esd_err_irq_flags_second = mi_dsi_panel_read_esd_irq_flags(
+					utils->data, "mi,esd-err-irq-gpio-second");
 			mi_cfg->esd_err_irq_second = gpio_to_irq(mi_cfg->esd_err_irq_gpio_second);
 			rc = gpio_request(mi_cfg->esd_err_irq_gpio_second, "esd_err_irq_gpio_second");
 			if (rc)
