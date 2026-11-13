@@ -7222,7 +7222,15 @@ int dsi_panel_disable(struct dsi_panel *panel)
 	mi_cfg->feature_val[DISP_FEATURE_HBM] = FEATURE_OFF;
 	mi_cfg->feature_val[DISP_FEATURE_HBM_FOD] = FEATURE_OFF;
 	mi_cfg->feature_val[DISP_FEATURE_LOCAL_HBM] = LOCAL_HBM_OFF_TO_NORMAL;
-	mi_cfg->feature_val[DISP_FEATURE_FLAT_MODE] = FEATURE_OFF;
+	/*
+	 * Keep the requested flat mode across power-off: stock relies on its
+	 * display HAL to re-send it after every screen-on, which custom ROMs
+	 * do not ship, so the setting was lost at the first screen-off. The
+	 * panel itself comes back in its default (non-flat) state, so record
+	 * that; with flat-need-sync-te the first commit after power-on then
+	 * re-sends flat mode from mi_sde_connector_flat_fence().
+	 */
+	mi_cfg->flat_cfg.cur_flat_state = FEATURE_OFF;
 	mi_cfg->feature_val[DISP_FEATURE_FP_STATUS] = FINGERPRINT_NONE;
 	mi_cfg->dimming_state = STATE_NONE;
 	mi_cfg->in_fod_calibration = false;
