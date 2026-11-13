@@ -6106,6 +6106,17 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 		dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_HBM_ON);
 		dsi_panel_update_backlight(panel, panel->mi_cfg.last_bl_level);
 	}
+
+	/*
+	 * L10: the AOD-high command leaves 0x51 at 0x0FFF and the NOLP command does not
+	 * rewrite it, so the panel shows full brightness in normal mode until the backlight
+	 * is set "after aod layer" ~45 ms later (a visible flash on wake / notification
+	 * pulse). Restore the real level in the same transition.
+	 */
+	if (!rc && mi_get_panel_id(panel->mi_cfg.mi_panel_id) == L10_PANEL_PA &&
+		panel->mi_cfg.last_bl_level)
+		dsi_panel_update_backlight(panel, panel->mi_cfg.last_bl_level);
+
 	DISP_TIME_INFO("%s panel: DSI_CMD_SET_NOLP\n", panel->type);
 exit1:
 
