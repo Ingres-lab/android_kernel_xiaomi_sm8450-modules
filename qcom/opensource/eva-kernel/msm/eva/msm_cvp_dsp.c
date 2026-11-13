@@ -1315,6 +1315,7 @@ static void __dsp_cvp_sess_create(struct cvp_dsp_cmd_msg *cmd)
 	struct cvp_dsp_fastrpc_driver_entry *frpc_node = NULL;
 	struct pid *pid_s = NULL;
 	struct task_struct *task = NULL;
+	uint32_t hlos_pid;
 	struct cvp_hfi_device *hdev;
 
 	cmd->ret = 0;
@@ -1370,13 +1371,26 @@ static void __dsp_cvp_sess_create(struct cvp_dsp_cmd_msg *cmd)
 	if (frpc_node)
 		eva_fastrpc_driver_add_sess(frpc_node, inst);
 
-	pid_s = find_get_pid(inst->process_id);
+	/*
+	 * On this fastrpc driver the DSP reports the unique fastrpc process id
+	 * (a small index), not the HLOS tgid. Resolve the real process through
+	 * the fastrpc device, otherwise inst->task is some unrelated task and
+	 * every fd the DSP hands us fails to resolve.
+	 */
+	hlos_pid = inst->process_id;
+	if (frpc_node && frpc_node->cvp_fastrpc_device) {
+		int t = fastrpc_device_get_hlos_tgid(frpc_node->cvp_fastrpc_device);
+
+		if (t > 0)
+			hlos_pid = t;
+	}
+	pid_s = find_get_pid(hlos_pid);
 	if (pid_s == NULL) {
 		dprintk(CVP_WARN, "%s incorrect pid\n", __func__);
 		goto fail_get_pid;
 	}
-	dprintk(CVP_DSP, "%s get pid_s 0x%pK from pidA 0x%x\n", __func__,
-			pid_s, inst->process_id);
+	dprintk(CVP_DSP, "%s get pid_s 0x%pK from pidA 0x%x (frpc pid 0x%x)\n",
+			__func__, pid_s, hlos_pid, inst->process_id);
 
 	task = get_pid_task(pid_s, PIDTYPE_TGID);
 	if (!task) {

@@ -9145,6 +9145,20 @@ bail:
 }
 EXPORT_SYMBOL(fastrpc_driver_register);
 
+/*
+ * The DSP only knows the unique fastrpc process id (fl->tgid_frpc), which is
+ * also the fastrpc_device handle. Clients such as EVA/CVP that must resolve
+ * the HLOS process (e.g. to look up dma-buf fds it passed to the DSP) use
+ * this to get the real tgid.
+ */
+int fastrpc_device_get_hlos_tgid(struct fastrpc_device *dev)
+{
+	if (!dev || !dev->fl)
+		return -EINVAL;
+	return dev->fl->tgid;
+}
+EXPORT_SYMBOL(fastrpc_device_get_hlos_tgid);
+
 static int __init fastrpc_device_init(void)
 {
 	struct fastrpc_apps *me = &gfa;

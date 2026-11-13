@@ -102,6 +102,7 @@ struct fastrpc_driver {
  * @drv: Initialized fastrpc driver structure pointer
  */
 int fastrpc_driver_register(struct fastrpc_driver *drv);
+int fastrpc_device_get_hlos_tgid(struct fastrpc_device *dev);
 
 /**
  * function fastrpc_driver_unregister - Un-register fastrpc driver
