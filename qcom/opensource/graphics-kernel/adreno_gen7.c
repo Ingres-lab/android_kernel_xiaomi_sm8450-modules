@@ -855,8 +855,18 @@ int gen7_start(struct adreno_device *adreno_dev)
 			BIT(3) | BIT(2) |
 			FIELD_PREP(GENMASK(1, 0), 2));
 
-	/* Set the AHB default slave response to "OKAY" */
-	if (adreno_is_gen7_4_0(adreno_dev))
+	/*
+	 * Set the AHB default slave response to "OKAY".
+	 *
+	 * Upstream limits this to gen7_4_0, but the a730_sqe.fw that ships with the Xiaomi
+	 * firmware (written for the 5.10 driver, which always set this) makes the CP write
+	 * RB_CCU_CNTL (0x8e07), a register the gen7_0_0 GPU does not implement. With the
+	 * reset default (bus ERROR) every such write raised "CP: AHB bus error,
+	 * CP_RL_ERROR_DETAILS_0:0x10008e07" on each CP init / IFPC exit.
+	 * This must happen before gen7_patch_pwrup_reglist() snapshots the value, because
+	 * CP_AHB_CNTL is in the IFPC restore list.
+	 */
+	if (adreno_is_gen7_0_x_family(adreno_dev))
 		kgsl_regwrite(device, GEN7_CP_AHB_CNTL, 0x1);
 
 	/*

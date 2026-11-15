@@ -5343,10 +5343,15 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 	 * rewrite it, so the panel shows full brightness in normal mode until the backlight
 	 * is set "after aod layer" ~45 ms later (a visible flash on wake / notification
 	 * pulse). Restore the real level in the same transition.
+	 *
+	 * last_bl_level is 0 while the AOD is up (the LP1 "backlight 0" is skipped but still
+	 * stored), and the real wake level (10..13) only arrives ~30 ms after NOLP. So do not
+	 * gate on it: fall back to the level the wake ramp starts from. This calls the DCS
+	 * writer directly, so is_backlight_set_skip() (bl_enable == false in AOD) is bypassed.
 	 */
-	if (!rc && mi_get_panel_id(panel->mi_cfg.mi_panel_id) == L10_PANEL_PA &&
-		panel->mi_cfg.last_bl_level)
-		dsi_panel_update_backlight(panel, panel->mi_cfg.last_bl_level);
+	if (!rc && mi_get_panel_id(panel->mi_cfg.mi_panel_id) == L10_PANEL_PA)
+		dsi_panel_update_backlight(panel, panel->mi_cfg.last_bl_level ?
+				panel->mi_cfg.last_bl_level : 10);
 
 	DISP_TIME_INFO("%s panel: DSI_CMD_SET_NOLP\n", panel->type);
 #endif /* CONFIG_DRM_SDE_SPECIFIC_PANEL */
