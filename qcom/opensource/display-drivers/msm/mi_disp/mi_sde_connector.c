@@ -273,8 +273,18 @@ static int mi_sde_connector_update_aod_status(struct drm_connector *connector,
 				} else {
 					sde_enc->ready_kickoff = false;
 				}
-				if (c_conn->lp_mode == SDE_MODE_DPMS_LP1
-						|| c_conn->lp_mode == SDE_MODE_DPMS_LP2) {
+				/*
+				 * Leave LP1/LP2 only when an AOD-flagged layer was on screen in the
+				 * previous frame and is gone now: MIUI's composer tags its AOD window
+				 * with MI_LAYER_AOD. AOSP never sets the flag, so every commit while
+				 * dozing looked like "AOD layer gone" and sent NOLP, dropping the
+				 * panel out of AOD into normal mode (brightness flashes, no low-power
+				 * mode). Without the flag, Android's power ON path sends NOLP itself.
+				 * The previous frame's flags are still in mi_layer_state here.
+				 */
+				if ((c_conn->lp_mode == SDE_MODE_DPMS_LP1
+						|| c_conn->lp_mode == SDE_MODE_DPMS_LP2)
+						&& c_conn->mi_layer_state.layer_flags.aod_flag) {
 					dsi_panel_set_nolp(display->panel);
 				}
 			}
