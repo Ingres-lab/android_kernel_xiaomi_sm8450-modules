@@ -5322,6 +5322,33 @@ int dsi_panel_set_nolp(struct dsi_panel *panel)
 		}
 	} else {
 		mi_dsi_update_nolp_cmd_B2reg(panel, DSI_CMD_SET_NOLP);
+		/*
+		 * L10: 0x51 takes four bytes here: the first two are the normal-mode level, the
+		 * last two the AOD level (the doze command writes "51 00 00 01 55", 341). Normal
+		 * backlight writes are two bytes. On idle-off the panel's built-in dimming starts
+		 * its fade from the AOD value, so every wake after the doze-brightness switch
+		 * showed the clock at ~341 fading down to a dark-room level of ~10: a bright flash.
+		 * Turn dimming off and load the wake level into both halves right before NOLP, with
+		 * no wait: with dimming off the panel applies 0x51 on its next scan, the same one
+		 * that leaves idle, so there is neither a dark AOD frame nor a frame at 341.
+		 * (Keeping the AOD half still flashed for a frame; waiting 40 ms first showed a dark
+		 * blink.) The dimming delayed work turns dimming back on after the wake
+		 * (STATE_DIM_RESTORE below). Diagnosed on the device through mipi_rw.
+		 */
+		if (mi_get_panel_id(panel->mi_cfg.mi_panel_id) == L10_PANEL_PA) {
+			u32 lvl = panel->mi_cfg.last_bl_level ? panel->mi_cfg.last_bl_level : 10;
+			u8 dbv[4] = { lvl >> 8, lvl & 0xff, lvl >> 8, lvl & 0xff };
+			u8 dim_off = 0x20;	/* 0x53: backlight dimming off (on = 0x28) */
+			unsigned long flags = panel->mipi_device.mode_flags;
+
+			panel->mipi_device.mode_flags |= MIPI_DSI_MODE_LPM;
+			mipi_dsi_dcs_write(&panel->mipi_device, MIPI_DCS_WRITE_CONTROL_DISPLAY,
+					&dim_off, 1);
+			if (mipi_dsi_dcs_write(&panel->mipi_device, MIPI_DCS_SET_DISPLAY_BRIGHTNESS,
+					dbv, sizeof(dbv)) < 0)
+				DSI_ERR("[%s] L10 pre-NOLP brightness write failed\n", panel->name);
+			panel->mipi_device.mode_flags = flags;
+		}
 		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_NOLP);
 	}
 	if (rc)
