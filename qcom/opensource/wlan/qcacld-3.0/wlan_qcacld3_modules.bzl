@@ -5,6 +5,10 @@ load("@rules_pkg//pkg:install.bzl", "pkg_install")
 load("@rules_pkg//pkg:mappings.bzl", "pkg_files", "strip_prefix")
 
 _target_chipset_map = {
+    # ingres (POCO F4 GT): QCA6490 (WCN6855), configs from the Neo 6.6 waipio target
+    "waipio": [
+        "qca6490",
+    ],
     "seraph": [
         "peach-v2",
     ],

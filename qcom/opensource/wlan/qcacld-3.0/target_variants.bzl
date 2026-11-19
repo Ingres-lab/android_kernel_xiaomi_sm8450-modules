@@ -14,6 +14,7 @@ targets = [
     "vienna",
     "hamoa_la",
     "glymur",
+    "waipio",
 ]
 
 la_variants = [
