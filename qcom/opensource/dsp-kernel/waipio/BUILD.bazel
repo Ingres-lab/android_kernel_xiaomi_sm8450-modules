@@ -1,0 +1,61 @@
+# ingres (waipio): the Neo 6.6 dsp-kernel (legacy adsprpc + cdsp-loader). The ingres vendor
+# blobs (libadsprpc, ueventd, sepolicy) use /dev/adsprpc-smd and the adsprpc ioctl ABI, which
+# the 6.12 fastrpc driver does not provide. Built for 6.12 with the vendor config.
+# Sources: aosp/kernel/xiaomi/sm8450-modules/qcom/opensource/dsp-kernel (Kbuild, ARCH_WAIPIO).
+load("//build/kernel/kleaf:kernel.bzl", "ddk_module", "kernel_module_group")
+
+package(default_visibility = ["//visibility:public"])
+
+ddk_module(
+    name = "waipio_perf_frpc-adsprpc",
+    out = "frpc-adsprpc.ko",
+    srcs = [
+        "dsp/adsprpc.c",
+        "dsp/adsprpc_compat.c",
+        "dsp/adsprpc_compat.h",
+        "dsp/adsprpc_rpmsg.c",
+        "dsp/adsprpc_shared.h",
+        "dsp/fastrpc_trace.h",
+    ],
+    hdrs = [
+        "include/linux/fastrpc.h",
+        "include/uapi/fastrpc_shared.h",
+    ],
+    includes = [
+        "include/linux",
+        "include/uapi",
+    ],
+    # trace header path, relative to the SoC repo's include/trace
+    local_defines = [
+        "CONFIG_DSP_WAIPIO=1",
+        "DSP_TRACE_INCLUDE_PATH=../../../vendor/xiaomi/sm8450-modules/qcom/opensource/dsp-kernel/waipio/dsp",
+    ],
+    copts = ["-Wno-format"],
+    config = "//vendor/xiaomi/sm8450:waipio_perf_config",
+    kernel_build = "//vendor/xiaomi/sm8450:waipio_perf_base_kernel",
+    deps = [
+        "//vendor/xiaomi/sm8450:all_headers",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/firmware/qcom/qcom-scm",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/soc/qcom/mem_buf/mem_buf_dev",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/soc/qcom/pdr_interface",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/rpmsg/qcom_glink",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/remoteproc/rproc_qcom_common",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/soc/qcom/minidump",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/soc/qcom/qcom_ramdump",
+        "//vendor/xiaomi/sm8450:waipio_perf/drivers/soc/qcom/socinfo",
+    ],
+)
+
+ddk_module(
+    name = "waipio_perf_cdsp-loader",
+    out = "cdsp-loader.ko",
+    srcs = ["dsp/cdsp-loader.c"],
+    config = "//vendor/xiaomi/sm8450:waipio_perf_config",
+    kernel_build = "//vendor/xiaomi/sm8450:waipio_perf_base_kernel",
+    deps = ["//vendor/xiaomi/sm8450:all_headers"],
+)
+
+kernel_module_group(
+    name = "waipio_perf_modules",
+    srcs = [":waipio_perf_frpc-adsprpc", ":waipio_perf_cdsp-loader"],
+)
