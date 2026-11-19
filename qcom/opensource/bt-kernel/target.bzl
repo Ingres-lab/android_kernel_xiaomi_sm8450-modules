@@ -224,3 +224,17 @@ def define_hamoa_la():
              # "CONFIG_FMD_ENABLE",  # Commented out - cnss_utils dependency not available for hamoa_la
         ]
     )
+
+# ingres (POCO F4 GT): WCN6855/QCA6490 BT power + BT-FM slimbus, as loaded on 6.6 (no FM radio)
+def define_waipio():
+    define_bt_modules(
+        target = "waipio",
+        modules = [
+            "btpower",
+            "bt_fm_slim",
+        ],
+        config_options = [
+            "CONFIG_MSM_BT_POWER",
+            "CONFIG_BTFM_SLIM",
+        ]
+    )
