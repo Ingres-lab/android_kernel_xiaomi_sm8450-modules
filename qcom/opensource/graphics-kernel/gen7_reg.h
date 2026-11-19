@@ -57,6 +57,7 @@
 #define GEN7_CP_APRIV_CNTL               0x844
 #define GEN7_CP_SEMAPHORE_REG_0          0x846
 #define GEN7_CP_PROTECT_CNTL             0x84f
+#define GEN7_CP_AHB_CNTL                 0x98d
 #define GEN7_CP_PROTECT_REG              0x850
 #define GEN7_CP_CONTEXT_SWITCH_CNTL      0x8a0
 #define GEN7_CP_CONTEXT_SWITCH_SMMU_INFO_LO 0x8a1

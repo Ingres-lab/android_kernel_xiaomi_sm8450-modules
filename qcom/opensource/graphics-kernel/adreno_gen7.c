@@ -112,6 +112,7 @@ static const u32 gen7_ifpc_pwrup_reglist[] = {
 	GEN7_CP_PROTECT_REG+45,
 	GEN7_CP_PROTECT_REG+46,
 	GEN7_CP_PROTECT_REG+47,
+	GEN7_CP_AHB_CNTL,
 };
 
 static const u32 gen7_0_0_ifpc_pwrup_reglist[] = {
@@ -1049,6 +1050,19 @@ int gen7_start(struct adreno_device *adreno_dev)
 			kgsl_regwrite(device, GEN7_SP_LPAC_CHICKEN_BITS_2, BIT(4));
 		}
 	}
+
+	/*
+	 * Set the AHB default slave response to "OKAY" on gen7_0_x (ingres A730).
+	 *
+	 * The a730_sqe.fw that ships with the Xiaomi firmware (written for the 5.10
+	 * driver, which always set this) makes the CP write RB_CCU_CNTL (0x8e07), a
+	 * register gen7_0_0 does not implement. With the reset default (bus ERROR)
+	 * every such write raised "CP: AHB bus error, CP_RL_ERROR_DETAILS_0:0x10008e07"
+	 * on each CP init / IFPC exit. Must be written before the power-up reglist is
+	 * patched below.
+	 */
+	if (adreno_is_gen7_0_x_family(adreno_dev))
+		kgsl_regwrite(device, GEN7_CP_AHB_CNTL, 0x1);
 
 	_set_secvid(device);
 

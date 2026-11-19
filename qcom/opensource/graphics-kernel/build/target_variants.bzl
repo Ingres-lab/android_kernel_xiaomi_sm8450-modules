@@ -7,6 +7,7 @@ targets = [
     "parrot",
     "sun",
     "vienna",
+    "waipio",
     "bengal",
     "chora",
     "shikra",
