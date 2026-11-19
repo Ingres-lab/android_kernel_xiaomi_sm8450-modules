@@ -2,7 +2,7 @@
 # blobs (libadsprpc, ueventd, sepolicy) use /dev/adsprpc-smd and the adsprpc ioctl ABI, which
 # the 6.12 fastrpc driver does not provide. Built for 6.12 with the vendor config.
 # Sources: aosp/kernel/xiaomi/sm8450-modules/qcom/opensource/dsp-kernel (Kbuild, ARCH_WAIPIO).
-load("//build/kernel/kleaf:kernel.bzl", "ddk_module", "kernel_module_group")
+load("//build/kernel/kleaf:kernel.bzl", "ddk_headers", "ddk_module", "kernel_module_group")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -58,4 +58,14 @@ ddk_module(
 kernel_module_group(
     name = "waipio_perf_modules",
     srcs = [":waipio_perf_frpc-adsprpc", ":waipio_perf_cdsp-loader"],
+)
+
+# <linux/fastrpc.h> for kernel clients (eva-kernel/waipio)
+ddk_headers(
+    name = "fastrpc_headers",
+    hdrs = [
+        "include/linux/fastrpc.h",
+        "include/uapi/fastrpc_shared.h",
+    ],
+    includes = ["include"],
 )
