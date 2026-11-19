@@ -1,6 +1,7 @@
 load(":securemsm_kernel.bzl", "define_consolidate_gki_modules")
 
 def define_waipio():
+    # ingres: the securemsm modules ingres loads on 6.6 (no test drivers, no smmu-proxy)
     define_consolidate_gki_modules(
         target = "waipio",
         modules = [
@@ -12,18 +13,12 @@ def define_waipio():
             "qcedev-mod_dlkm",
             "qrng_dlkm",
             "qcrypto-msm_dlkm",
-            "smmu_proxy_dlkm",
             "tmecom-intf_dlkm",
-            "seccam_test_driver",
-            "hdcp2p2_test",
-            "si_core_test",
-            "tornado_mod",
          ],
+         # as 6.6 waipio and 6.12 monaco: compat smcinvoke + qseecom, no SI-core (older TZ)
          extra_options = [
-             "CONFIG_QCOM_SI_CORE_TEST",
              "CONFIG_QCOM_SMCINVOKE",
-             "CONFIG_QSEECOM_COMPAT",
-             "CONFIG_QCOM_SI_CORE",
+             "CONFIG_QSEECOM",
          ],
      )
 
