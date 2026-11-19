@@ -136,8 +136,8 @@ int mi_sde_backlight_setup(struct sde_connector *c_conn,
 	int rc = 0;
 
 	if (c_conn->connector_type != DRM_MODE_CONNECTOR_DSI) {
-		DISP_ERROR("please check connector_type: %s\n",
-			drm_get_connector_type_name(c_conn->connector_type));
+		DISP_ERROR("please check connector_type: %d\n",
+			c_conn->connector_type); /* drm_get_connector_type_name is not in the GKI KMI */
 		return 0;
 	}
 

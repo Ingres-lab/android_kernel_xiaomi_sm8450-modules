@@ -2316,10 +2316,10 @@ void sde_cp_crtc_restore_pcc(struct drm_crtc *crtc)
 
 	for (i = 0; i < num_mixers; i++) {
 		hw_dspp = sde_crtc->mixers[i].hw_dspp;
-		if (!hw_dspp || !hw_dspp->ops.setup_pcc)
+		if (!hw_dspp || !hw_dspp->ops.setup_pcc[hw_dspp->hw.disp_op])
 			continue;
 		else {
-			hw_dspp->ops.setup_pcc(hw_dspp, &stored_pcc_config_);
+			hw_dspp->ops.setup_pcc[hw_dspp->hw.disp_op](hw_dspp, &stored_pcc_config_);
 			need_restore_pcc_ = false;
 			right_after_restore_ = true;
 		}
@@ -4251,6 +4251,7 @@ int sde_cp_hist_interrupt(struct drm_crtc *crtc_drm, bool en,
 	struct sde_irq_callback *hist_irq)
 {
 	struct sde_kms *kms = NULL;
+	u32 num_mixers;
 	struct sde_hw_mixer *hw_lm;
 	struct sde_hw_dspp *hw_dspp = NULL;
 	struct sde_crtc *crtc;
@@ -4272,7 +4273,7 @@ int sde_cp_hist_interrupt(struct drm_crtc *crtc_drm, bool en,
 	kms = get_kms(crtc_drm);
 	num_mixers = _sde_cp_get_num_dspp_mixers(crtc);
 
-	for (i = 0; i < crtc->num_mixers; i++) {
+	for (i = 0; i < num_mixers; i++) {
 		hw_lm = crtc->mixers[i].hw_lm;
 		hw_dspp = crtc->mixers[i].hw_dspp;
 		if (!hw_lm)  {

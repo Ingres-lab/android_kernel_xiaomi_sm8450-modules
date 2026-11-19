@@ -346,7 +346,7 @@ static const struct file_operations disp_feature_fops = {
 #endif
 	.poll            = mi_disp_poll,
 	.read            = mi_disp_read,
-	.llseek          = no_llseek,
+	.llseek          = noop_llseek,
 };
 
 int mi_disp_feature_init(void)

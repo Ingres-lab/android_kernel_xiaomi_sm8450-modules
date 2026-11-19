@@ -1278,6 +1278,8 @@ static inline bool sde_encoder_has_dpu_ctl_op_sync(struct drm_encoder *drm_enc)
 	sde_enc = to_sde_encoder_virt(drm_enc);
 	return sde_enc->dpu_ctl_op_sync;
 }
+
+/**
  * sde_crtc_has_fps_switch_to_low_set - return fps_switch_high_to_low in sde enc
  * @crtc:	Pointer to drm crtc structure
  * @Return:	true if there is fps_switch from high_to_low

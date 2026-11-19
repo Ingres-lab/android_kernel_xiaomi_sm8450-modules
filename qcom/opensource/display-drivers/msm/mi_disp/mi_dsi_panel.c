@@ -17,7 +17,7 @@
 #include "dsi_display.h"
 #include "dsi_ctrl_hw.h"
 #include "dsi_parser.h"
-#include "../../../../kernel/irq/internals.h"
+#include <linux/interrupt.h>
 #include "sde_connector.h"
 #include "sde_trace.h"
 #include "mi_dsi_panel.h"
@@ -199,7 +199,6 @@ int mi_dsi_panel_esd_irq_ctrl_locked(struct dsi_panel *panel,
 				bool enable)
 {
 	struct mi_dsi_panel_cfg *mi_cfg;
-	struct irq_desc *desc;
 
 	if (!panel || !panel->panel_initialized) {
 		DISP_ERROR("Panel not ready!\n");
@@ -211,9 +210,8 @@ int mi_dsi_panel_esd_irq_ctrl_locked(struct dsi_panel *panel,
 		if (mi_cfg->esd_err_irq) {
 			if (enable) {
 				if (!mi_cfg->esd_err_enabled) {
-					desc = irq_to_desc(mi_cfg->esd_err_irq);
-					if (!irq_settings_is_level(desc))
-						desc->istate &= ~IRQS_PENDING;
+					/* 6.12: irq_desc is not exported; drop a latched edge in the irqchip */
+					irq_set_irqchip_state(mi_cfg->esd_err_irq, IRQCHIP_STATE_PENDING, false);
 					enable_irq_wake(mi_cfg->esd_err_irq);
 					enable_irq(mi_cfg->esd_err_irq);
 					mi_cfg->esd_err_enabled = true;
@@ -236,9 +234,8 @@ int mi_dsi_panel_esd_irq_ctrl_locked(struct dsi_panel *panel,
 			if (mi_cfg->esd_err_irq_second) {
 				if (enable) {
 					if (!mi_cfg->esd_err_enabled_second) {
-						desc = irq_to_desc(mi_cfg->esd_err_irq_second);
-						if (!irq_settings_is_level(desc))
-							desc->istate &= ~IRQS_PENDING;
+						/* 6.12: irq_desc is not exported; drop a latched edge in the irqchip */
+						irq_set_irqchip_state(mi_cfg->esd_err_irq_second, IRQCHIP_STATE_PENDING, false);
 						enable_irq_wake(mi_cfg->esd_err_irq_second);
 						enable_irq(mi_cfg->esd_err_irq_second);
 						mi_cfg->esd_err_enabled_second = true;
@@ -862,7 +859,7 @@ int mi_dsi_panel_write_cmd_set(struct dsi_panel *panel,
 		if (state == DSI_CMD_SET_STATE_LP)
 			cmds->msg.flags |= MIPI_DSI_MSG_USE_LPM;
 
-		len = dsi_host_transfer_sub(panel->host, cmds);
+		len = dsi_host_transfer_sub(panel->host, cmds, false);
 		if (len < 0) {
 			rc = len;
 			DISP_ERROR("failed to set cmds, rc=%d\n", rc);

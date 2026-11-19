@@ -5929,7 +5929,6 @@ int dsi_panel_set_lp1(struct dsi_panel *panel)
 {
 	int rc = 0;
 	int bl_lvl __maybe_unused;
-	struct drm_ext_event event __maybe_unused;
 	struct dsi_display *display = NULL;
 	int disp_id = 0;
 
@@ -6040,7 +6039,6 @@ exit:
 int dsi_panel_set_nolp(struct dsi_panel *panel)
 {
 	int rc = 0;
-	struct drm_ext_event event __maybe_unused;
 
 	if (!panel) {
 		DSI_ERR("invalid params\n");
