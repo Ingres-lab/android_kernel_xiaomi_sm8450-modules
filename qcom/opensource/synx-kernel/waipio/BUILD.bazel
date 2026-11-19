@@ -1,0 +1,46 @@
+# ingres (waipio): the Neo 6.6 synx techpack (global synx over qcom_ipc_lite, as the waipio
+# firmware and the 6.6 camera/EVA HALs expect), built for the 6.12 kernel with the vendor config.
+# Sources: aosp/kernel/xiaomi/sm8450-modules/qcom/opensource/synx-kernel (msm/Kbuild, ARCH_WAIPIO).
+load("//build/kernel/kleaf:kernel.bzl", "ddk_headers", "ddk_module", "kernel_module_group")
+
+package(default_visibility = ["//visibility:public"])
+
+ddk_headers(
+    name = "synx_headers",
+    hdrs = glob(["include/**/*.h", "msm/synx/**/*.h"]),
+    includes = [
+        "include",
+        "include/uapi",
+        "include/uapi/synx",
+        "msm/synx",
+    ],
+)
+
+ddk_module(
+    name = "waipio_perf_qcom_ipc_lite",
+    out = "qcom_ipc_lite.ko",
+    srcs = ["msm/synx/qcom_ipc_lite.c"],
+    deps = ["//vendor/xiaomi/sm8450:all_headers", ":synx_headers"],
+    config = "//vendor/xiaomi/sm8450:waipio_perf_config",
+    kernel_build = "//vendor/xiaomi/sm8450:waipio_perf_base_kernel",
+    local_defines = ["CONFIG_MSM_GLOBAL_SYNX"],
+)
+
+ddk_module(
+    name = "waipio_perf_synx-driver",
+    out = "synx-driver.ko",
+    srcs = [
+        "msm/synx/synx.c",
+        "msm/synx/synx_debugfs.c",
+        "msm/synx/synx_util.c",
+    ],
+    deps = ["//vendor/xiaomi/sm8450:all_headers", ":synx_headers", ":waipio_perf_qcom_ipc_lite"],
+    config = "//vendor/xiaomi/sm8450:waipio_perf_config",
+    kernel_build = "//vendor/xiaomi/sm8450:waipio_perf_base_kernel",
+    local_defines = ["CONFIG_MSM_GLOBAL_SYNX"],
+)
+
+kernel_module_group(
+    name = "waipio_perf_modules",
+    srcs = [":waipio_perf_qcom_ipc_lite", ":waipio_perf_synx-driver"],
+)

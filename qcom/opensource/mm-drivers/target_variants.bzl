@@ -10,6 +10,7 @@ targets = [
     "malabar",
     "niobe",
     "autogvm",
+    "waipio",
 ]
 
 la_variants = [
